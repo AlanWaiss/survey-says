@@ -1,0 +1,14 @@
+[
+  {
+    "outputFileName": "wwwroot/js/app.js",
+    "inputFiles": [
+      "js/routes.js",
+      "js/components/sign-in.js",
+      "js/routes/host.js",
+      "js/routes/play.js",
+      "js/routes/index.js",
+      "js/router.js",
+      "js/app.js"
+    ]
+  }
+]
