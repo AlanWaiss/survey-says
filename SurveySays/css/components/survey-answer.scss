@@ -1,14 +1,22 @@
-﻿.survey-answer {
-	border: solid 1px #eee;
+﻿///<reference path="../_colors.scss" />
+.survey-answer {
+	border: solid 1px $c-border;
 	border-radius: .5rem;
 	margin-bottom: .5rem;
 	padding: .5rem 1rem;
+
+	.survey-active & {
+		&:focus, &:hover {
+			border-color: $c-primary;
+			box-shadow: 0 2px 5px rgba($c-primary, .3);
+		}
+	}
 }
 
 .survey-answer-selected {
-	background-color: #09f;
-	border-color: #09f;
-	color: #fff;
+	background-color: $c-primary;
+	border-color: $c-primary;
+	color: $c-contrast;
 }
 
 .survey-answer-show {

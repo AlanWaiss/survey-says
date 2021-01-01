@@ -77,7 +77,7 @@
 				<div v-if="survey">
 					<div class="game">
 						<p class="lead">{{survey.question}}</p>
-						<survey-board :answers="survey.answers" :selected="game && game.answers" @answer-click="answerClick($event)"></survey-board>
+						<survey-board class="survey-active" :answers="survey.answers" :selected="game && game.answers" @answer-click="answerClick($event)"></survey-board>
 					</div>
 				</div>
 				<div v-else>Loading...</div>

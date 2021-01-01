@@ -1,12 +1,15 @@
 ﻿.survey-answer {
-  border: solid 1px #eee;
+  border: solid 1px #ced4da;
   border-radius: .5rem;
   margin-bottom: .5rem;
   padding: .5rem 1rem; }
+  .survey-active .survey-answer:focus, .survey-active .survey-answer:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 5px rgba(0, 123, 255, 0.3); }
 
 .survey-answer-selected {
-  background-color: #09f;
-  border-color: #09f;
+  background-color: #007bff;
+  border-color: #007bff;
   color: #fff; }
 
 .survey-answer-show {

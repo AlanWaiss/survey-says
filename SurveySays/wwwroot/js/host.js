@@ -97,7 +97,7 @@ Vue.component('survey-answer', {
 		<div class="survey-answer-score">{{answer.score}}</div>
 	</div>
 	<div v-else class="survey-answer-hide">
-		<div class="survey-answer-index">{{index + 1}}</div>
+		<div class="survey-answer-index badge badge-pill badge-secondary">{{index + 1}}</div>
 	</div>
 </li>`
 });
@@ -266,7 +266,7 @@ hostRoutes.push({
 				<div v-if="survey">
 					<div class="game">
 						<p class="lead">{{survey.question}}</p>
-						<survey-board :answers="survey.answers" :selected="game && game.answers" @answer-click="answerClick($event)"></survey-board>
+						<survey-board class="survey-active" :answers="survey.answers" :selected="game && game.answers" @answer-click="answerClick($event)"></survey-board>
 					</div>
 				</div>
 				<div v-else>Loading...</div>

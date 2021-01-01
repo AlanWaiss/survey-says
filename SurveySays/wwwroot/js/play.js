@@ -97,7 +97,7 @@ Vue.component('survey-answer', {
 		<div class="survey-answer-score">{{answer.score}}</div>
 	</div>
 	<div v-else class="survey-answer-hide">
-		<div class="survey-answer-index">{{index + 1}}</div>
+		<div class="survey-answer-index badge badge-pill badge-secondary">{{index + 1}}</div>
 	</div>
 </li>`
 });
