@@ -13,23 +13,24 @@ namespace SurveySays.Models
 		[Required]
 		public SurveyAnswer[] Answers { get; set; }
 
+		[JsonProperty( "groupId" )]
+		[JsonPropertyName( "groupId" )]
+		[Required]
+		public string GroupId { get; set; }
+
 		[JsonProperty( "hostId" )]
 		[JsonPropertyName( "hostId" )]
 		[Required]
 		public string HostId { get; set; }
 
-		[Ignore]
-		[JsonIgnore]
-		private string id;
-
 		[JsonProperty( "id" )]
 		[JsonPropertyName( "id" )]
+		public string Id { get; set; }
+
+		[JsonProperty( "name" )]
+		[JsonPropertyName( "name" )]
 		[Required]
-		public string Id
-		{
-			get => id ??= Guid.NewGuid().ToString().ToLower();
-			set => id = value;
-		}
+		public string Name { get; set; }
 
 		[JsonProperty( "passcode" )]
 		[JsonPropertyName( "passcode" )]

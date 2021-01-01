@@ -3,7 +3,7 @@
 	<sign-in class="col-sm"></sign-in>
 	<div class="col-sm">
 		<router-link to="play" class="btn btn-outline-secondary btn-block btn-lg">Play</router-link>
-		<router-link to="host" class="btn btn-outline-secondary btn-block btn-lg">Host</router-link>
+		<a href="/host" class="btn btn-outline-secondary btn-block btn-lg">Host</a>
 	</div>
 </div>`
 }

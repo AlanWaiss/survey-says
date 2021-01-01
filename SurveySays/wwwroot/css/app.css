@@ -1,1 +1,17 @@
-﻿
+﻿.survey-answer {
+  border: solid 1px #eee;
+  border-radius: .5rem;
+  margin-bottom: .5rem;
+  padding: .5rem 1rem; }
+
+.survey-answer-selected {
+  background-color: #09f;
+  border-color: #09f;
+  color: #fff; }
+
+.survey-answer-show {
+  display: flex;
+  justify-content: space-between; }
+
+.survey-answer-hide {
+  text-align: center; }

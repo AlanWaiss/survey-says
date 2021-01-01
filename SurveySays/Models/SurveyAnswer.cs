@@ -21,5 +21,15 @@ namespace SurveySays.Models
 		[JsonProperty( "text" )]
 		[JsonPropertyName( "text" )]
 		public string Text { get; set; }
+
+		public SurveyAnswer()
+		{
+		}
+
+		public SurveyAnswer( string text, int score = 0 )
+		{
+			Text = text;
+			Score = score;
+		}
 	}
 }

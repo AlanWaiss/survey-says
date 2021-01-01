@@ -2,9 +2,46 @@
   {
     "outputFileName": "wwwroot/js/app.js",
     "inputFiles": [
+      "js/fetch-json.js",
+      "js/gameHub.js",
       "js/routes.js",
+      "js/user.js",
+      "js/components/answer-board.js",
+      "js/components/survey-answer.js",
+      "js/components/survey-board.js",
       "js/components/sign-in.js",
       "js/routes/host.js",
+      "js/routes/play.js",
+      "js/routes/index.js",
+      "js/router.js",
+      "js/app.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/host.js",
+    "inputFiles": [
+      "js/gameHub.js",
+      "js/routes.js",
+      "js/user.js",
+      "js/components/answer-board.js",
+      "js/components/survey-answer.js",
+      "js/components/survey-board.js",
+      "js/components/sign-in.js",
+      "js/routes/host.js",
+      "js/routes/index.js",
+      "js/router.js",
+      "js/app.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/play.js",
+    "inputFiles": [
+      "js/gameHub.js",
+      "js/routes.js",
+      "js/user.js",
+      "js/components/answer-board.js",
+      "js/components/survey-answer.js",
+      "js/components/sign-in.js",
       "js/routes/play.js",
       "js/routes/index.js",
       "js/router.js",
