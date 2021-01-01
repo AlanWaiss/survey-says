@@ -11,6 +11,8 @@
       "js/components/survey-board.js",
       "js/components/sign-in.js",
       "js/routes/host.js",
+      "js/routes/host-index.js",
+      "js/routes/host-group-survey-game.js",
       "js/routes/play.js",
       "js/routes/index.js",
       "js/router.js",
@@ -28,6 +30,8 @@
       "js/components/survey-board.js",
       "js/components/sign-in.js",
       "js/routes/host.js",
+      "js/routes/host-index.js",
+      "js/routes/host-group-survey-game.js",
       "js/routes/index.js",
       "js/router.js",
       "js/app.js"
