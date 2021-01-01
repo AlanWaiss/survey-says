@@ -258,25 +258,35 @@ hostRoutes.push({
 					.then(data => t.survey = data);
 			}
 		},
-		template: `<div>
-	<h2>Survey</h2>
-	<div v-if="survey">
-		<div class="game">
-			<p class="lead">{{survey.question}}</p>
-			<survey-board :answers="survey.answers" :selected="game && game.answers" @answer-click="answerClick($event)"></survey-board>
+		template: `<div class="container-fluid pt-3">
+	<div class="card-deck">
+		<div class="card">
+			<div class="card-body">
+				<h2 class="card-title">Survey</h2>
+				<div v-if="survey">
+					<div class="game">
+						<p class="lead">{{survey.question}}</p>
+						<survey-board :answers="survey.answers" :selected="game && game.answers" @answer-click="answerClick($event)"></survey-board>
+					</div>
+				</div>
+				<div v-else>Loading...</div>
+			</div>
+			<div class="card-footer">
+				Link to play: <a :href="gameUrl">{{gameUrl}}</a>
+			</div>
+		</div>
+		<div class="card">
+			<div v-if="game" class="card-body">
+				<h2>{{ game.name }}</h2>
+				<div class="game">
+					<p class="lead">{{game.question}}</p>
+					<answer-board :answers="game.answers"></answer-board>
+				</div>
+			</div>
+			<div v-else class="card-body">Loading...</div>
+			<div class="card-footer">This is how the game currently appears to players</div>
 		</div>
 	</div>
-	<div v-else>Loading...</div>
-	<p>Link to play: <a :href="gameUrl">{{gameUrl}}</a></p>
-	<div v-if="game">
-		<h2>{{ game.name }}</h2>
-		<p>This is how {{ game.name }} currently appears to players:</p>
-		<div class="game">
-			<p class="lead">{{game.question}}</p>
-			<answer-board :answers="game.answers"></answer-board>
-		</div>
-	</div>
-	<div v-else>Loading...</div>
 </div>`
 	}
 });
