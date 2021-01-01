@@ -1,4 +1,9 @@
 ﻿///<reference path="../_colors.scss" />
+%survey-answer-active {
+	border-color: $c-primary;
+	box-shadow: 0 2px 5px rgba($c-primary, .3);
+}
+
 .survey-answer {
 	border: solid 1px $c-border;
 	border-radius: .5rem;
@@ -7,9 +12,12 @@
 
 	.survey-active & {
 		&:focus, &:hover {
-			border-color: $c-primary;
-			box-shadow: 0 2px 5px rgba($c-primary, .3);
+			@extend %survey-answer-active;
 		}
+	}
+
+	.survey-active:focus &.active {
+		@extend %survey-answer-active;
 	}
 }
 

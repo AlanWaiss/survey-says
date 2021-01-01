@@ -8,6 +8,33 @@ function fetchJson(url, options) {
 			return response.json();
 		});
 }
+const apiService = {
+	root: '/api',
+	loadSurvey: function(groupId, surveyId) {
+		return fetchJson(this.root + '/survey/' + encodeURIComponent(groupId) + '/' + encodeURIComponent(surveyId), {
+			credentials: 'same-origin'
+		});
+	},
+	saveSurvey: function(survey) {
+		var url = this.root + '/survey/' + encodeURIComponent(survey.groupId),
+			method = "POST";
+		if(survey.id) {
+			url += "/" + encodeURIComponent(survey.id);
+			method = "PUT";
+		}
+		return fetchJson(url, {
+			method: method,
+			cache: 'no-cache',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			redirect: 'follow',
+			referrerPolicy: 'no-referrer',
+			body: JSON.stringify(survey)
+		});
+	}
+};
 const _debug = 1,
 	CONNECTION_STATUS = {
 		Connected: 1,
@@ -84,14 +111,46 @@ const user = {
 	id: "",
 	name: ""
 };
+const breadcrumbs = [];
+
+Vue.component('breadcrumb-nav', {
+	data: function() {
+		breadcrumbs: breadcrumbs
+	},
+	template: `<nav aria-label="breadcrumb" id="breadcrumb" style="display:none" v-show="breadcrumbs.length > 0">
+	<ol class="breadcrumb">
+		<li v-for="item in breadcrumbs" class="breadcrumb-item" :class="{'active': item.active}">
+			<router-link v-if="item.route" :to="item.route">{{item.text}}</router-link>
+			<a v-else-if="item.url" :href="item.url">{{item.text}}</a>
+			<span v-else>{{item.text}}</span>
+		</li>
+	</ol>
+</nav>`
+})
 Vue.component('answer-board', {
-	props: ['answers'],
+	props: {
+		answers: Array,
+		prefix: {
+			default: 'survey_answer_',
+			type: String
+		}
+	},
 	template: `<ol class="answer-board list-unstyled">
-	<survey-answer v-for="(answer, index) in answers" :answer="answer" :index="index"></survey-answer>
+	<survey-answer v-for="(answer, index) in answers" :answer="answer" :index="index" :prefix="prefix"></survey-answer>
 </ol>`
 });
 Vue.component('survey-answer', {
-	props: ['answer', 'index'],
+	props: {
+		answer: Object,
+		index: {
+			required: true,
+			type: Number
+		},
+		prefix: {
+			default: 'survey_answer_',
+			type: String
+		}
+	},
 	methods: {
 		answerClick: function(e) {
 			this.$emit('answer-click', {
@@ -101,7 +160,7 @@ Vue.component('survey-answer', {
 			});
 		}
 	},
-	template: `<li class="survey-answer" @click="answerClick($event)">
+	template: `<li class="survey-answer" :id="prefix + index" @click="answerClick($event)">
 	<div v-if="answer" class="survey-answer-show">
 		<div class="survey-answer-text">{{answer.text}}</div>
 		<div class="survey-answer-score">{{answer.score}}</div>
@@ -112,7 +171,14 @@ Vue.component('survey-answer', {
 </li>`
 });
 Vue.component('survey-board', {
-	props: ['answers', 'selected'],
+	props: {
+		answers: Array,
+		prefix: {
+			default: 'survey_answer_',
+			type: String
+		},
+		selected: Array
+	},
 	methods: {
 		answerClick: function(e) {
 			this.$emit('answer-click', e);
@@ -126,7 +192,7 @@ Vue.component('survey-board', {
 		}
 	},
 	template: `<ol class="survey-board list-unstyled">
-	<survey-answer v-for="(answer, index) in answers" :answer="answer" :index="index" :class="{'survey-answer-selected': isSelected(answer)}" @answer-click="answerClick($event)"></survey-answer>
+	<survey-answer v-for="(answer, index) in answers" :answer="answer" :index="index" :class="{'survey-answer-selected': isSelected(answer)}" @answer-click="answerClick($event)" :prefix="prefix"></survey-answer>
 </ol>`
 });
 Vue.component('sign-in', {
@@ -198,9 +264,162 @@ hostRoutes.push({
 	}
 });
 hostRoutes.push({
+	path: ':groupId',
+	component: {
+		data: function() {
+			return {
+				groupId: null,
+				group: null,
+				groupProblem: null
+			};
+		},
+		methods: {
+		},
+		template: `<div class="container">
+	<h2>Group</h2>
+	<div v-if="group"></div>
+	<div v-else-if="groupProblem">{{groupProblem}}</div>
+	<div v-else>This is not yet implemented</div>
+</div>`
+	}
+});
+hostRoutes.push({
+	path: ':groupId/:surveyId',
+	component: {
+		beforeRouteEnter: function(to, from, next) {
+			var route = "/host",
+				bc = [0, breadcrumbs.length,
+					{
+						text: "Home",
+						url: "/"
+					},
+					{
+						text: "Host",
+						route: route
+					},
+					{
+						text: to.params.groupId,
+						route: route += "/" + encodeURIComponent(to.params.groupId)
+					},
+					{
+						active: true,
+						text: "Survey"
+					}];
+			breadcrumbs.splice.apply(breadcrumbs, bc);
+			next(vm => vm.loadSurvey(to.params.groupId, to.params.surveyId));
+		},
+		beforeRouteUpdate: function(to, from, next) {
+			this.loadSurvey(to.params.groupId, to.params.surveyId);
+			next();
+		},
+		data: function() {
+			return {
+				editQuestion: "",
+				groupId: null,
+				questionProblem: null,
+				surveyId: null,
+				survey: null,
+				surveyProblem: null
+			};
+		},
+		methods: {
+			answerClick: function(e) {
+
+			},
+			loadSurvey: function(groupId, surveyId) {
+				var t = this;
+				if(groupId == t.groupId && surveyId == t.surveyId)
+					return;
+				t.survey = null;
+				apiService.loadSurvey(t.groupId = groupId, t.surveyId = surveyId)
+					.then(survey => t.survey = survey, problem => t.surveyProblem = problem || "Invalid survey");
+			},
+			questionEdit: function(e) {
+				this.editQuestion = this.survey.question || "";
+				e.preventDefault();
+			},
+			questionSave: function(e) {
+				var t = this;
+				if(t.editQuestion) {
+					t.questionProblem = 0;
+					if(t.survey.question != t.editQuestion) {
+						t.survey.question = t.editQuestion;
+						apiService.saveSurvey(t.survey)
+							.then(survey => {
+								$('#question_modal').modal('hide');
+								t.questionProblem = null;
+							}, x => t.questionProblem = x || "There was a problem saving the question.");
+						return;
+					}
+				}
+				$('#question_modal').modal('hide');
+			},
+			saveSurvey: function() {
+			}
+		},
+		template: `<div class="container">
+	<h2>Survey</h2>
+	<div v-if="survey">
+		<div class="game">
+			<p class="lead"><a href="#question_modal" data-toggle="modal" @click="questionEdit($event)">{{survey.question}}</a></p>
+			<survey-board class="survey-active" :answers="survey.answers" @answer-click="answerClick($event)"></survey-board>
+			<button type="button" class="btn btn-outline-primary">Add an Answer</button>
+		</div>
+	</div>
+	<div v-else-if="surveyProblem">{{surveyProblem}}</div>
+	<div v-else>Loading...</div>
+	<div class="modal fade" id="question_modal" tabindex="-1" aria-labelledby="question_title" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="question_title">Survey Question</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<div class="form-group">
+						<label for="survey_question">Survey Question</label>
+						<input id="survey_question" class="form-control" :class="{'is-invalid': questionProblem}" v-model.trim="editQuestion" required="required" aria-describedby="survey_question_problem" />
+						<div id="survey_question_problem" class="invalid-feedback" v-show="questionProblem">{{questionProblem}}</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" @click="questionSave($event)" :disabled="questionProblem === 0">OK</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>`
+	}
+});
+hostRoutes.push({
 	path: ':groupId/:surveyId/:gameId',
 	component: {
 		beforeRouteEnter: function(to, from, next) {
+			var route = "/host",
+				bc = [0, breadcrumbs.length,
+					{
+						text: "Home",
+						url: "/"
+					},
+					{
+						text: "Host",
+						route: route
+					},
+					{
+						text: to.params.groupId,
+						route: route += "/" + encodeURIComponent(to.params.groupId)
+					},
+					{
+						text: "Survey",
+						route: route += "/" + encodeURIComponent(to.params.surveyId)
+					},
+					{
+						active: true,
+						text: "Game"
+					}];
+			breadcrumbs.splice.apply(breadcrumbs, bc);
 			next(vm => {
 				vm.loadSurvey(to.params.groupId, to.params.surveyId);
 				vm.connect(to.params.groupId, to.params.gameId);
@@ -223,8 +442,11 @@ hostRoutes.push({
 		},
 		data: function() {
 			return {
+				groupId: null,
+				surveyId: null,
 				game: null,
-				survey: null
+				survey: null,
+				surveyProblem: null
 			};
 		},
 		methods: {
@@ -264,8 +486,11 @@ hostRoutes.push({
 			},
 			loadSurvey: function(groupId, surveyId) {
 				var t = this;
-				fetchJson('/api/survey/' + encodeURIComponent(groupId) + '/' + encodeURIComponent(surveyId))
-					.then(data => t.survey = data);
+				if(groupId == t.groupId && surveyId == t.surveyId)
+					return;
+				t.survey = null;
+				apiService.loadSurvey(t.groupId = groupId, t.surveyId = surveyId)
+					.then(survey => t.survey = survey, problem => t.surveyProblem = problem || "Invalid survey");
 			}
 		},
 		template: `<div class="container-fluid pt-3">
@@ -279,6 +504,7 @@ hostRoutes.push({
 						<survey-board class="survey-active" :answers="survey.answers" :selected="game && game.answers" @answer-click="answerClick($event)"></survey-board>
 					</div>
 				</div>
+				<div v-else-if="surveyProblem">{{surveyProblem}}</div>
 				<div v-else>Loading...</div>
 			</div>
 			<div class="card-footer">
@@ -290,7 +516,7 @@ hostRoutes.push({
 				<h2>{{ game.name }}</h2>
 				<div class="game">
 					<p class="lead">{{game.question}}</p>
-					<answer-board :answers="game.answers"></answer-board>
+					<answer-board :answers="game.answers" prefix="game_answer_"></answer-board>
 				</div>
 			</div>
 			<div v-else class="card-body">Loading...</div>

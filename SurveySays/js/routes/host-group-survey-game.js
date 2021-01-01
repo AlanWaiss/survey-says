@@ -2,6 +2,29 @@
 	path: ':groupId/:surveyId/:gameId',
 	component: {
 		beforeRouteEnter: function(to, from, next) {
+			var route = "/host",
+				bc = [0, breadcrumbs.length,
+					{
+						text: "Home",
+						url: "/"
+					},
+					{
+						text: "Host",
+						route: route
+					},
+					{
+						text: to.params.groupId,
+						route: route += "/" + encodeURIComponent(to.params.groupId)
+					},
+					{
+						text: "Survey",
+						route: route += "/" + encodeURIComponent(to.params.surveyId)
+					},
+					{
+						active: true,
+						text: "Game"
+					}];
+			breadcrumbs.splice.apply(breadcrumbs, bc);
 			next(vm => {
 				vm.loadSurvey(to.params.groupId, to.params.surveyId);
 				vm.connect(to.params.groupId, to.params.gameId);
@@ -24,8 +47,11 @@
 		},
 		data: function() {
 			return {
+				groupId: null,
+				surveyId: null,
 				game: null,
-				survey: null
+				survey: null,
+				surveyProblem: null
 			};
 		},
 		methods: {
@@ -65,8 +91,11 @@
 			},
 			loadSurvey: function(groupId, surveyId) {
 				var t = this;
-				fetchJson('/api/survey/' + encodeURIComponent(groupId) + '/' + encodeURIComponent(surveyId))
-					.then(data => t.survey = data);
+				if(groupId == t.groupId && surveyId == t.surveyId)
+					return;
+				t.survey = null;
+				apiService.loadSurvey(t.groupId = groupId, t.surveyId = surveyId)
+					.then(survey => t.survey = survey, problem => t.surveyProblem = problem || "Invalid survey");
 			}
 		},
 		template: `<div class="container-fluid pt-3">
@@ -80,6 +109,7 @@
 						<survey-board class="survey-active" :answers="survey.answers" :selected="game && game.answers" @answer-click="answerClick($event)"></survey-board>
 					</div>
 				</div>
+				<div v-else-if="surveyProblem">{{surveyProblem}}</div>
 				<div v-else>Loading...</div>
 			</div>
 			<div class="card-footer">
@@ -91,7 +121,7 @@
 				<h2>{{ game.name }}</h2>
 				<div class="game">
 					<p class="lead">{{game.question}}</p>
-					<answer-board :answers="game.answers"></answer-board>
+					<answer-board :answers="game.answers" prefix="game_answer_"></answer-board>
 				</div>
 			</div>
 			<div v-else class="card-body">Loading...</div>

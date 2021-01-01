@@ -8,7 +8,7 @@ namespace SurveySays.Controllers
 {
 	public class HomeController : Controller
 	{
-		[HttpGet, Route( "play/{groupId?}/{gameId?}" )]
+		[HttpGet, Route( "" ), Route( "play/{groupId?}/{gameId?}" )]
 		public IActionResult Index( string groupId = null, string gameId = null )
 		{
 			return View();

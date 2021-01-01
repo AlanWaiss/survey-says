@@ -1,5 +1,15 @@
 ﻿Vue.component('survey-answer', {
-	props: ['answer', 'index'],
+	props: {
+		answer: Object,
+		index: {
+			required: true,
+			type: Number
+		},
+		prefix: {
+			default: 'survey_answer_',
+			type: String
+		}
+	},
 	methods: {
 		answerClick: function(e) {
 			this.$emit('answer-click', {
@@ -9,7 +19,7 @@
 			});
 		}
 	},
-	template: `<li class="survey-answer" @click="answerClick($event)">
+	template: `<li class="survey-answer" :id="prefix + index" @click="answerClick($event)">
 	<div v-if="answer" class="survey-answer-show">
 		<div class="survey-answer-text">{{answer.text}}</div>
 		<div class="survey-answer-score">{{answer.score}}</div>

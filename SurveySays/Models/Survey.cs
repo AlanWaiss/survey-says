@@ -28,7 +28,6 @@ namespace SurveySays.Models
 
 		[JsonProperty( "hostId" )]
 		[JsonPropertyName( "hostId" )]
-		[Required]
 		public string HostId { get; set; }
 
 		[JsonProperty( "id" )]
@@ -37,6 +36,7 @@ namespace SurveySays.Models
 
 		[JsonProperty( "question" )]
 		[JsonPropertyName( "question" )]
+		[Required]
 		public string Question { get; set; }
 	}
 }

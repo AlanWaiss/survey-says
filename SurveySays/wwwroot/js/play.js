@@ -1,3 +1,30 @@
+const apiService = {
+	root: '/api',
+	loadSurvey: function(groupId, surveyId) {
+		return fetchJson(this.root + '/survey/' + encodeURIComponent(groupId) + '/' + encodeURIComponent(surveyId), {
+			credentials: 'same-origin'
+		});
+	},
+	saveSurvey: function(survey) {
+		var url = this.root + '/survey/' + encodeURIComponent(survey.groupId),
+			method = "POST";
+		if(survey.id) {
+			url += "/" + encodeURIComponent(survey.id);
+			method = "PUT";
+		}
+		return fetchJson(url, {
+			method: method,
+			cache: 'no-cache',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			redirect: 'follow',
+			referrerPolicy: 'no-referrer',
+			body: JSON.stringify(survey)
+		});
+	}
+};
 const _debug = 1,
 	CONNECTION_STATUS = {
 		Connected: 1,
@@ -74,14 +101,46 @@ const user = {
 	id: "",
 	name: ""
 };
+const breadcrumbs = [];
+
+Vue.component('breadcrumb-nav', {
+	data: function() {
+		breadcrumbs: breadcrumbs
+	},
+	template: `<nav aria-label="breadcrumb" id="breadcrumb" style="display:none" v-show="breadcrumbs.length > 0">
+	<ol class="breadcrumb">
+		<li v-for="item in breadcrumbs" class="breadcrumb-item" :class="{'active': item.active}">
+			<router-link v-if="item.route" :to="item.route">{{item.text}}</router-link>
+			<a v-else-if="item.url" :href="item.url">{{item.text}}</a>
+			<span v-else>{{item.text}}</span>
+		</li>
+	</ol>
+</nav>`
+})
 Vue.component('answer-board', {
-	props: ['answers'],
+	props: {
+		answers: Array,
+		prefix: {
+			default: 'survey_answer_',
+			type: String
+		}
+	},
 	template: `<ol class="answer-board list-unstyled">
-	<survey-answer v-for="(answer, index) in answers" :answer="answer" :index="index"></survey-answer>
+	<survey-answer v-for="(answer, index) in answers" :answer="answer" :index="index" :prefix="prefix"></survey-answer>
 </ol>`
 });
 Vue.component('survey-answer', {
-	props: ['answer', 'index'],
+	props: {
+		answer: Object,
+		index: {
+			required: true,
+			type: Number
+		},
+		prefix: {
+			default: 'survey_answer_',
+			type: String
+		}
+	},
 	methods: {
 		answerClick: function(e) {
 			this.$emit('answer-click', {
@@ -91,7 +150,7 @@ Vue.component('survey-answer', {
 			});
 		}
 	},
-	template: `<li class="survey-answer" @click="answerClick($event)">
+	template: `<li class="survey-answer" :id="prefix + index" @click="answerClick($event)">
 	<div v-if="answer" class="survey-answer-show">
 		<div class="survey-answer-text">{{answer.text}}</div>
 		<div class="survey-answer-score">{{answer.score}}</div>
