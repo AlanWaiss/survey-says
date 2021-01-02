@@ -7,8 +7,8 @@ show it on the player's board.
 ## Road Map
 
 1. Basic UI for the host
-	- Create a survey
-	- Enter answers
+	- Create a survey :heavy_check_mark:
+	- Enter answers :heavy_check_mark:
 	- Create/start a game
 	- Invite players
 2. Basic UI for the player
@@ -20,3 +20,7 @@ show it on the player's board.
 	- Answer tallied
 	- Host can rename and combine answers
 4. Spectator mode
+
+## Future
+
+- Implement undo (Ctrl + Z) when editing a survey
