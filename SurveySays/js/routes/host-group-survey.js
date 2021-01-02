@@ -33,11 +33,19 @@
 				editAnswer: null,
 				editQuestion: "",
 				groupId: null,
+				newAnswers: [],
 				questionProblem: null,
 				surveyId: null,
 				survey: null,
 				surveyProblem: null
 			};
+		},
+		computed: {
+			totalScore: function() {
+				var total = 0;
+				this.survey.answers.forEach(answer => total += answer.score);
+				return total;
+			}
 		},
 		methods: {
 			answerClick: function(e) {
@@ -63,6 +71,8 @@
 			answerDelete: function(e, index) {
 				this.survey.answers.splice(index, 1);
 				this.saveSurvey();
+				e.preventDefault();
+				e.stopPropagation();
 			},
 			answerKeyDown: function(e) {
 				var t = this,
@@ -133,7 +143,7 @@
 				}
 			},
 			answerSort: function() {
-				if(this.survey)
+				if(this.survey) {
 					this.survey.answers.sort(function(a1, a2) {
 						//order by score desc, text asc
 						var s1 = a1.score,
@@ -150,6 +160,8 @@
 							return 1;
 						return 0;
 					});
+					this.saveSurvey();
+				}
 			},
 			/**
 			 * Gets editAnswer if editing the specified answer
@@ -171,6 +183,40 @@
 						t.survey = survey;
 						t.currentAnswer = survey.answers[0];
 					}, problem => t.surveyProblem = problem || "Invalid survey");
+			},
+			newAnswerAdd: function(e) {
+				var t = this;
+				t.newAnswers.push({
+					$o: {
+						score: 0,
+						text: ""
+					},
+					$src: {
+						score: 0,
+						text: ""
+					},
+					score: 0,
+					text: ""
+				});
+				t.$nextTick(function() {
+					$('#new_answer_' + (t.newAnswers.length - 1) + ' input').first().focus();
+				});
+			},
+			newAnswerEdit: function(e) {
+				if(e.answer.text && e.answer.score) {
+					this.newAnswers.splice(e.index, 1);
+					this.survey.answers.push(e.answer);
+					this.answerSort();
+				}
+			},
+			newAnswerKeyDown: function(e) {
+				var t = this,
+					$event = e.$event;
+				switch($event.key) {
+					case "Escape":
+						t.newAnswers.splice(e.index, 1);
+						break;
+				}
 			},
 			questionEdit: function(e) {
 				this.editQuestion = this.survey.question || "";
@@ -209,7 +255,11 @@
 					</div>
 				</survey-answer>
 			</ol>
-			<button type="button" class="btn btn-outline-primary">Add an Answer</button>
+			<div class="form-group">{{survey.answers.length}} answer(s), totaling {{totalScore}}</div>
+			<ol class="survey-board survey-active list-unstyled">
+				<survey-answer v-for="(answer, index) in newAnswers" :answer="answer.$src" :index="index" tabindex="0" :edit="answer" prefix="new_answer_" @answer-keydown="newAnswerKeyDown($event)" @answer-edit="newAnswerEdit"></survey-answer>
+			</ol>
+			<button type="button" class="btn btn-outline-primary" @click="newAnswerAdd($event)">Add an Answer</button>
 		</div>
 	</div>
 	<div v-else-if="surveyProblem">{{surveyProblem}}</div>
