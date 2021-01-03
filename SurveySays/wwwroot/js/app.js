@@ -757,7 +757,7 @@ hostRoutes.push({
 				var t = this;
 				if(t.game && t.survey) {
 					var update = $.extend(true, {}, t.game);
-					update.answers[e.index] = $.extend({}, e.answer);
+					update.answers[e.index] = update.answers[e.index] ? null : $.extend({}, e.answer);
 					gameHub.send('GameUpdate', update);
 				}
 			},
