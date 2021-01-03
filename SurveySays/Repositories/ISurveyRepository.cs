@@ -6,5 +6,6 @@ namespace SurveySays.Repositories
 {
 	public interface ISurveyRepository : IRepository<Survey>
 	{
+		Task<List<Survey>> SearchAsync( string groupId, string hostId );
 	}
 }

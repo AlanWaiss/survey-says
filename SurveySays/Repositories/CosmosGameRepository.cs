@@ -13,30 +13,6 @@ namespace SurveySays.Repositories
 		{
 		}
 
-		public async Task<List<Game>> GetGamesAsync( string groupId, string surveyId, string hostId )
-		{
-			var query = Container.GetItemQueryIterator<Game>( new QueryDefinition( @"SELECT *
-FROM c
-WHERE c.surveyId = @surveyId
-	AND c.hostId = @hostId" )
-				.WithParameter( "@surveyId", surveyId.ToLower() )
-				.WithParameter( "@hostId", hostId.ToLower() ),
-				requestOptions: new QueryRequestOptions
-				{
-					PartitionKey = new PartitionKey( groupId.ToLower() )
-				} );
-
-			var games = new List<Game>();
-
-			while( query.HasMoreResults )
-			{
-				var response = await query.ReadNextAsync();
-				games.AddRange( response.Resource );
-			}
-
-			return games;
-		}
-
 		public override async Task SaveAsync( Game game )
 		{
 			if( string.IsNullOrWhiteSpace( game.Id ) )
@@ -46,6 +22,51 @@ WHERE c.surveyId = @surveyId
 			}
 			else
 				await Container.ReplaceItemAsync( game, game.Id, new PartitionKey( game.GroupId ) );
+		}
+
+		public async Task<List<Game>> SearchAsync( string groupId, string surveyId, string hostId )
+		{
+			if( string.IsNullOrWhiteSpace( groupId ) )
+				throw new ArgumentNullException( nameof( groupId ) );
+
+			var query = new CosmosQueryBuilder( @"SELECT *
+FROM c" );
+
+			var filters = new List<string>();
+
+			if( !string.IsNullOrWhiteSpace( surveyId ) )
+			{
+				filters.Add( "c.surveyId = @surveyId" );
+				query.AddParameter( "@surveyId", surveyId.ToLower() );
+			}
+
+			if( !string.IsNullOrWhiteSpace( hostId ) )
+			{
+				filters.Add( "c.hostId = @hostId" );
+				query.AddParameter( "@hostId", hostId.ToLower() );
+			}
+
+			if( filters.Count > 0 )
+			{
+				query.Query += @"
+WHERE " + string.Join( " AND ", filters );
+			}
+
+			var iterator = Container.GetItemQueryIterator<Game>( query.Build(),
+				requestOptions: new QueryRequestOptions
+				{
+					PartitionKey = new PartitionKey( groupId.ToLower() )
+				} );
+
+			var games = new List<Game>();
+
+			while( iterator.HasMoreResults )
+			{
+				var response = await iterator.ReadNextAsync();
+				games.AddRange( response.Resource );
+			}
+
+			return games;
 		}
 	}
 }

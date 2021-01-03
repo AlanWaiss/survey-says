@@ -1,12 +1,38 @@
 ﻿const apiService = {
 	root: '/api',
-	loadGames: function(groupId, surveyId) {
-		return fetchJson(this.root + '/game/' + encodeURIComponent(groupId) + '?survey=' + encodeURIComponent(surveyId), {
+	appendParams: function(url, params) {
+		if(params) {
+			for(let keys = Object.getOwnPropertyNames(params), len = keys.length, i = 0, first = url.indexOf('?') == -1; i < len; i++) {
+				if(first) {
+					url += '?';
+					first = false;
+				}
+				else
+					url += '&';
+				url += encodeURIComponent(keys[i]);
+				url += '=';
+				url += encodeURIComponent(params[keys[i]]);
+			}
+		}
+		return url;
+	},
+	loadGames: function(groupId, params) {
+		return fetchJson(this.appendParams(this.root + '/game/' + encodeURIComponent(groupId), params), {
+			credentials: 'same-origin'
+		});
+	},
+	loadGroup: function(groupId) {
+		return fetchJson(this.root + '/group/' + encodeURIComponent(groupId), {
 			credentials: 'same-origin'
 		});
 	},
 	loadSurvey: function(groupId, surveyId) {
 		return fetchJson(this.root + '/survey/' + encodeURIComponent(groupId) + '/' + encodeURIComponent(surveyId), {
+			credentials: 'same-origin'
+		});
+	},
+	loadSurveys: function(groupId, params) {
+		return fetchJson(this.appendParams(this.root + '/survey/' + encodeURIComponent(groupId), params), {
 			credentials: 'same-origin'
 		});
 	},

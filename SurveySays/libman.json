@@ -36,6 +36,16 @@
         "attribution.js",
         "package.json"
       ]
+    },
+    {
+      "library": "marked@latest",
+      "destination": "wwwroot/lib/marked/",
+      "files": [
+        "LICENSE.md",
+        "marked.min.js",
+        "package.json",
+        "README.md"
+      ]
     }
   ]
 }

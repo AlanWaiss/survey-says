@@ -30,11 +30,10 @@ namespace SurveySays.Controllers
 			return Ok( game );
 		}
 
-		[Authorize]
 		[HttpGet, Route( "{groupId}" )]
-		public async Task<IActionResult> GetGames( string groupId, [FromQuery( Name = "survey" )] string surveyId )
+		public async Task<IActionResult> GetGames( string groupId, [FromQuery( Name = "survey" )] string surveyId, [FromQuery( Name = "host" )] string hostId )
 		{
-			var survey = await GameRepository.GetGamesAsync( groupId, surveyId, User.GetObjectId() );
+			var survey = await GameRepository.SearchAsync( groupId, surveyId, hostId );
 			if( survey == null )
 				return NotFound();
 

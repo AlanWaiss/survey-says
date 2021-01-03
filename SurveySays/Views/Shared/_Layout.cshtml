@@ -43,13 +43,27 @@
 	<script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
 	<script src="https://unpkg.com/vue-router@3.4.9/dist/vue-router.min.js"></script>
 	<script src="~/js/signalr/dist/browser/signalr.min.js"></script>
-	<script src="~/js/app.js"></script>
-	@RenderSection( "scripts", required: false )
 @if( User.Identity.IsAuthenticated )
 {
 	<script>
-		user.id = "@User.GetObjectId()";
+		const user = {
+			authenticated: true,
+			id: "@User.GetObjectId()",
+			name: "@User.GetDisplayName()"
+		};
 	</script>
 }
+else
+{
+	<script>
+		const user = {
+			authenticated: false,
+			id: "",
+			name: ""
+		};
+	</script>
+}
+	<script src="~/js/app.js"></script>
+	@RenderSection( "scripts", required: false )
 </body>
 </html>

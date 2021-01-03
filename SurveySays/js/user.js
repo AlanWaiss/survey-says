@@ -1,4 +1,0 @@
-﻿const user = {
-	id: "",
-	name: ""
-};

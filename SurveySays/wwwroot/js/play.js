@@ -1,12 +1,38 @@
 const apiService = {
 	root: '/api',
-	loadGames: function(groupId, surveyId) {
-		return fetchJson(this.root + '/game/' + encodeURIComponent(groupId) + '?survey=' + encodeURIComponent(surveyId), {
+	appendParams: function(url, params) {
+		if(params) {
+			for(let keys = Object.getOwnPropertyNames(params), len = keys.length, i = 0, first = url.indexOf('?') == -1; i < len; i++) {
+				if(first) {
+					url += '?';
+					first = false;
+				}
+				else
+					url += '&';
+				url += encodeURIComponent(keys[i]);
+				url += '=';
+				url += encodeURIComponent(params[keys[i]]);
+			}
+		}
+		return url;
+	},
+	loadGames: function(groupId, params) {
+		return fetchJson(this.appendParams(this.root + '/game/' + encodeURIComponent(groupId), params), {
+			credentials: 'same-origin'
+		});
+	},
+	loadGroup: function(groupId) {
+		return fetchJson(this.root + '/group/' + encodeURIComponent(groupId), {
 			credentials: 'same-origin'
 		});
 	},
 	loadSurvey: function(groupId, surveyId) {
 		return fetchJson(this.root + '/survey/' + encodeURIComponent(groupId) + '/' + encodeURIComponent(surveyId), {
+			credentials: 'same-origin'
+		});
+	},
+	loadSurveys: function(groupId, params) {
+		return fetchJson(this.appendParams(this.root + '/survey/' + encodeURIComponent(groupId), params), {
 			credentials: 'same-origin'
 		});
 	},
@@ -123,11 +149,46 @@ const _debug = 1,
 })();
 /** The routes used by the app */
 const routes = [];
-const user = {
-	id: "",
-	name: ""
-};
 const breadcrumbs = [];
+
+function buildRoute() {
+	var t = this;
+	if(!(t && t instanceof buildRoute))
+		return new buildRoute();
+
+	t.path = [];
+	t.route = "";
+}
+$.extend(buildRoute.prototype, {
+	add: function(item) {
+		if("string" == typeof item)
+			item = {
+				text: item
+			};
+		this.route = item.route || item.url || this.route;
+		this.path.push(this.active = item);
+		return this;
+	},
+	addRoute: function(text, routeComponent) {
+		return this.add({
+			text: text,
+			route: this.route + "/" + encodeURIComponent(routeComponent)
+		});
+	},
+	addUrl: function(text, urlComponent) {
+		return this.add({
+			text: text,
+			url: this.route + "/" + encodeURIComponent(urlComponent)
+		});
+	},
+	apply: function() {
+		breadcrumbs.splice.apply(breadcrumbs, [0, breadcrumbs.length].concat(this.path));
+		return this;
+	},
+	peek: function() {
+		return this.active;
+	}
+});
 
 Vue.component('breadcrumb-nav', {
 	data: function() {
@@ -137,7 +198,7 @@ Vue.component('breadcrumb-nav', {
 	},
 	template: `<nav aria-label="breadcrumb" id="breadcrumb" style="display:none" v-show="items.length > 0">
 	<ol class="breadcrumb">
-		<li v-for="item in items" class="breadcrumb-item" :class="{'active': item.active}">
+		<li v-for="item in items" class="breadcrumb-item" :class="{'active': !(item.route || item.url)}">
 			<router-link v-if="item.route" :to="item.route">{{item.text}}</router-link>
 			<a v-else-if="item.url" :href="item.url">{{item.text}}</a>
 			<span v-else>{{item.text}}</span>

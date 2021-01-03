@@ -219,7 +219,10 @@
 						t.survey = survey;
 						t.currentAnswer = survey.answers[0];
 					}, problem => t.surveyProblem = problem || "Invalid survey");
-				apiService.loadGames(groupId, surveyId)
+				apiService.loadGames(groupId, {
+					survey: surveyId,
+					host: user.id
+				})
 					.then(games => t.games = games, problem => t.gamesProblem = problem || "Invalid survey");
 			},
 			newAnswerAdd: function(e) {

@@ -30,6 +30,16 @@ namespace SurveySays.Controllers
 			return Ok( survey );
 		}
 
+		[HttpGet, Route( "{groupId}" )]
+		public async Task<IActionResult> GetSurveys( string groupId, [FromQuery( Name = "host" )] string hostId )
+		{
+			var survey = await SurveyRepository.SearchAsync( groupId, hostId );
+			if( survey == null )
+				return NotFound();
+
+			return Ok( survey );
+		}
+
 		[Authorize]
 		[HttpPut, Route( "{groupId}" )]
 		public async Task<IActionResult> Post( string groupId, Survey survey )
