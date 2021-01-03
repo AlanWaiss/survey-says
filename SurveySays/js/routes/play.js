@@ -5,7 +5,6 @@
 			next(vm => vm.connect(to.params.groupId, to.params.gameId));
 		},
 		beforeRouteUpdate: function(to, from, next) {
-			this.disconnect();
 			this.connect(to.params.groupId, to.params.gameId);
 			next();
 		},
@@ -20,9 +19,34 @@
 		},
 		methods: {
 			connect: function(groupId, gameId) {
-				var t = this;
+				var t = this,
+					route = "/play",
+					bc = [0, breadcrumbs.length,
+						{
+							text: "Home",
+							route: "/"
+						},
+						{
+							text: "Play",
+							route: route
+						},
+						{
+							text: groupId,
+							route: route += "/" + encodeURIComponent(groupId)
+						},
+						{
+							active: true,
+							text: "Game"
+						}];
+
+				breadcrumbs.splice.apply(breadcrumbs, bc);
+
 				t.disconnect();
-				gameHub.on("gameUpdate", this.c_gameUpdate = (game => t.game = game));
+				gameHub.on("gameUpdate", this.c_gameUpdate = (game => {
+					t.game = game;
+					if(game.name)
+						bc[bc.length - 1].text = game.name;
+				}));
 				t.c_groupId = groupId;
 				t.c_gameId = gameId;
 				startHubAsync().then(function() {
@@ -46,13 +70,13 @@
 				}
 			}
 		},
-		template: `<div>
+		template: `<div class="container">
 	<div v-if="game" class="game">
+		<h2>{{ game.name }}</h2>
 		<p class="lead">{{game.question}}</p>
 		<answer-board :answers="game.answers"></answer-board>
 	</div>
 	<div v-else>Loading...</div>
-	<div>Ready to play game {{ $route.params.gameId }}</div>
 </div>`
 	}
 });

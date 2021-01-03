@@ -1,8 +1,32 @@
 const apiService = {
 	root: '/api',
+	loadGames: function(groupId, surveyId) {
+		return fetchJson(this.root + '/game/' + encodeURIComponent(groupId) + '?survey=' + encodeURIComponent(surveyId), {
+			credentials: 'same-origin'
+		});
+	},
 	loadSurvey: function(groupId, surveyId) {
 		return fetchJson(this.root + '/survey/' + encodeURIComponent(groupId) + '/' + encodeURIComponent(surveyId), {
 			credentials: 'same-origin'
+		});
+	},
+	saveGame: function(game) {
+		var url = this.root + '/game/' + encodeURIComponent(game.groupId),
+			method = "POST";
+		if(game.id) {
+			url += "/" + encodeURIComponent(game.id);
+			method = "PUT";
+		}
+		return fetchJson(url, {
+			method: method,
+			cache: 'no-cache',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			redirect: 'follow',
+			referrerPolicy: 'no-referrer',
+			body: JSON.stringify(game)
 		});
 	},
 	saveSurvey: function(survey) {
@@ -73,24 +97,26 @@ const _debug = 1,
 	reconnect.attempt = 0;
 	reconnect.timer = 0;
 
-	//var started;
+	var _started;
 	function startHubAsync() {
-		//if("Disconnected" != gameHub.state && started)
-		//	return started;
-
 		reconnect.timer = 0;
 
 		return new Promise((resolve, reject) => {
-			gameHub.start()
-				.then(function() {
-					//_vm.connectionStatus = CONNECTION_STATUS.Connected;
-					reconnect.attempt = 0;
-					resolve(gameHub);
-				}, function(x) {
-					console.error("Connection problem", x);
-					//_vm.connectionStatus = CONNECTION_STATUS.Disconnected;
-					reconnect(resolve, reject);
-				});
+			if("Connected" == gameHub.state)
+				resolve(gameHub);
+			else if("Disconnected" != gameHub.state && _started)
+				_started.then(resolve, reject);
+			else
+				_started = gameHub.start()
+					.then(function() {
+						//_vm.connectionStatus = CONNECTION_STATUS.Connected;
+						reconnect.attempt = 0;
+						resolve(gameHub);
+					}, function(x) {
+						console.error("Connection problem", x);
+						//_vm.connectionStatus = CONNECTION_STATUS.Disconnected;
+						reconnect(resolve, reject);
+					});
 		});
 	}
 	window.startHubAsync = startHubAsync;
@@ -105,11 +131,13 @@ const breadcrumbs = [];
 
 Vue.component('breadcrumb-nav', {
 	data: function() {
-		breadcrumbs: breadcrumbs
+		return {
+			items: breadcrumbs
+		};
 	},
-	template: `<nav aria-label="breadcrumb" id="breadcrumb" style="display:none" v-show="breadcrumbs.length > 0">
+	template: `<nav aria-label="breadcrumb" id="breadcrumb" style="display:none" v-show="items.length > 0">
 	<ol class="breadcrumb">
-		<li v-for="item in breadcrumbs" class="breadcrumb-item" :class="{'active': item.active}">
+		<li v-for="item in items" class="breadcrumb-item" :class="{'active': item.active}">
 			<router-link v-if="item.route" :to="item.route">{{item.text}}</router-link>
 			<a v-else-if="item.url" :href="item.url">{{item.text}}</a>
 			<span v-else>{{item.text}}</span>
@@ -244,7 +272,6 @@ routes.push({
 			next(vm => vm.connect(to.params.groupId, to.params.gameId));
 		},
 		beforeRouteUpdate: function(to, from, next) {
-			this.disconnect();
 			this.connect(to.params.groupId, to.params.gameId);
 			next();
 		},
@@ -259,9 +286,34 @@ routes.push({
 		},
 		methods: {
 			connect: function(groupId, gameId) {
-				var t = this;
+				var t = this,
+					route = "/play",
+					bc = [0, breadcrumbs.length,
+						{
+							text: "Home",
+							route: "/"
+						},
+						{
+							text: "Play",
+							route: route
+						},
+						{
+							text: groupId,
+							route: route += "/" + encodeURIComponent(groupId)
+						},
+						{
+							active: true,
+							text: "Game"
+						}];
+
+				breadcrumbs.splice.apply(breadcrumbs, bc);
+
 				t.disconnect();
-				gameHub.on("gameUpdate", this.c_gameUpdate = (game => t.game = game));
+				gameHub.on("gameUpdate", this.c_gameUpdate = (game => {
+					t.game = game;
+					if(game.name)
+						bc[bc.length - 1].text = game.name;
+				}));
 				t.c_groupId = groupId;
 				t.c_gameId = gameId;
 				startHubAsync().then(function() {
@@ -285,13 +337,13 @@ routes.push({
 				}
 			}
 		},
-		template: `<div>
+		template: `<div class="container">
 	<div v-if="game" class="game">
+		<h2>{{ game.name }}</h2>
 		<p class="lead">{{game.question}}</p>
 		<answer-board :answers="game.answers"></answer-board>
 	</div>
 	<div v-else>Loading...</div>
-	<div>Ready to play game {{ $route.params.gameId }}</div>
 </div>`
 	}
 });

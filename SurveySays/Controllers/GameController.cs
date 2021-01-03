@@ -1,6 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Web;
+using SurveySays.Models;
 using SurveySays.Repositories;
 using System;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace SurveySays.Controllers
@@ -24,6 +28,42 @@ namespace SurveySays.Controllers
 				return NotFound();
 
 			return Ok( game );
+		}
+
+		[Authorize]
+		[HttpGet, Route( "{groupId}" )]
+		public async Task<IActionResult> GetGames( string groupId, [FromQuery( Name = "survey" )] string surveyId )
+		{
+			var survey = await GameRepository.GetGamesAsync( groupId, surveyId, User.GetObjectId() );
+			if( survey == null )
+				return NotFound();
+
+			return Ok( survey );
+		}
+
+		[Authorize]
+		[HttpPost, Route( "{groupId}" )]
+		public async Task<IActionResult> Post( string groupId, Game game )
+		{
+			if( string.IsNullOrWhiteSpace( groupId ) )
+				return BadRequest( "Invalid groupId." );
+
+			if( game == null )
+				return BadRequest( "Missing game data." );
+
+			if( !ModelState.IsValid )
+				return BadRequest( ModelState );
+
+			if( string.IsNullOrWhiteSpace( game.GroupId ) || game.GroupId.Equals( groupId, StringComparison.OrdinalIgnoreCase ) )
+				game.GroupId = groupId.ToLower();
+			else
+				return BadRequest( "Invalid groupId." );
+
+			game.HostId = User.GetObjectId();
+
+			await GameRepository.SaveAsync( game );
+
+			return Created( Request.Path + "/" + WebUtility.UrlEncode( game.Id ), game );
 		}
 	}
 }

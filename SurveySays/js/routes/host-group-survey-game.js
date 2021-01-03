@@ -2,38 +2,10 @@
 	path: ':groupId/:surveyId/:gameId',
 	component: {
 		beforeRouteEnter: function(to, from, next) {
-			var route = "/host",
-				bc = [0, breadcrumbs.length,
-					{
-						text: "Home",
-						url: "/"
-					},
-					{
-						text: "Host",
-						route: route
-					},
-					{
-						text: to.params.groupId,
-						route: route += "/" + encodeURIComponent(to.params.groupId)
-					},
-					{
-						text: "Survey",
-						route: route += "/" + encodeURIComponent(to.params.surveyId)
-					},
-					{
-						active: true,
-						text: "Game"
-					}];
-			breadcrumbs.splice.apply(breadcrumbs, bc);
-			next(vm => {
-				vm.loadSurvey(to.params.groupId, to.params.surveyId);
-				vm.connect(to.params.groupId, to.params.gameId);
-			});
+			next(vm => vm.loadData(to.params.groupId, to.params.surveyId, to.params.gameId));
 		},
 		beforeRouteUpdate: function(to, from, next) {
-			this.disconnect();
-			this.loadSurvey(to.params.groupId, to.params.surveyId);
-			this.connect(to.params.groupId, to.params.gameId);
+			this.loadData(to.params.groupId, to.params.surveyId, to.params.gameId);
 			next();
 		},
 		beforeRouteLeave: function(to, from, next) {
@@ -47,6 +19,7 @@
 		},
 		data: function() {
 			return {
+				gameId: null,
 				groupId: null,
 				surveyId: null,
 				game: null,
@@ -66,7 +39,11 @@
 			connect: function(groupId, gameId) {
 				var t = this;
 				t.disconnect();
-				gameHub.on("gameUpdate", this.c_gameUpdate = (game => t.game = game));
+				gameHub.on("gameUpdate", this.c_gameUpdate = (game => {
+					t.game = game;
+					if(game.name)
+						breadcrumbs[breadcrumbs.length - 1].text = game.name;
+				}));
 				t.c_groupId = groupId;
 				t.c_gameId = gameId;
 				startHubAsync().then(function() {
@@ -89,11 +66,44 @@
 					delete t.c_gameId;
 				}
 			},
-			loadSurvey: function(groupId, surveyId) {
+			loadData: function(groupId, surveyId, gameId) {
 				var t = this;
+				gameId = gameId.toLowerCase();
+				groupId = groupId.toLowerCase();
+				surveyId = surveyId.toLowerCase();
+				var route = "/host",
+					bc = [0, breadcrumbs.length,
+						{
+							text: "Home",
+							url: "/"
+						},
+						{
+							text: "Host",
+							route: route
+						},
+						{
+							text: groupId,
+							route: route += "/" + encodeURIComponent(groupId)
+						},
+						{
+							text: "Survey",
+							route: route += "/" + encodeURIComponent(surveyId)
+						},
+						{
+							active: true,
+							text: "Host Game"
+						}];
+
+				breadcrumbs.splice.apply(breadcrumbs, bc);
+
+				if(groupId != t.groupId || gameId != t.gameId) {
+					t.gameId = gameId;
+					t.connect(groupId, gameId);
+				}
 				if(groupId == t.groupId && surveyId == t.surveyId)
 					return;
-				t.survey = null;
+
+				t.survey = t.surveyProblem = null;
 				apiService.loadSurvey(t.groupId = groupId, t.surveyId = surveyId)
 					.then(survey => t.survey = survey, problem => t.surveyProblem = problem || "Invalid survey");
 			}

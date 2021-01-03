@@ -46,24 +46,26 @@
 	reconnect.attempt = 0;
 	reconnect.timer = 0;
 
-	//var started;
+	var _started;
 	function startHubAsync() {
-		//if("Disconnected" != gameHub.state && started)
-		//	return started;
-
 		reconnect.timer = 0;
 
 		return new Promise((resolve, reject) => {
-			gameHub.start()
-				.then(function() {
-					//_vm.connectionStatus = CONNECTION_STATUS.Connected;
-					reconnect.attempt = 0;
-					resolve(gameHub);
-				}, function(x) {
-					console.error("Connection problem", x);
-					//_vm.connectionStatus = CONNECTION_STATUS.Disconnected;
-					reconnect(resolve, reject);
-				});
+			if("Connected" == gameHub.state)
+				resolve(gameHub);
+			else if("Disconnected" != gameHub.state && _started)
+				_started.then(resolve, reject);
+			else
+				_started = gameHub.start()
+					.then(function() {
+						//_vm.connectionStatus = CONNECTION_STATUS.Connected;
+						reconnect.attempt = 0;
+						resolve(gameHub);
+					}, function(x) {
+						console.error("Connection problem", x);
+						//_vm.connectionStatus = CONNECTION_STATUS.Disconnected;
+						reconnect(resolve, reject);
+					});
 		});
 	}
 	window.startHubAsync = startHubAsync;

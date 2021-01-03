@@ -1,6 +1,7 @@
 ﻿using Microsoft.Azure.Cosmos;
 using SurveySays.Models;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace SurveySays.Repositories
@@ -10,6 +11,30 @@ namespace SurveySays.Repositories
 		public CosmosGameRepository( Container container )
 			: base( container )
 		{
+		}
+
+		public async Task<List<Game>> GetGamesAsync( string groupId, string surveyId, string hostId )
+		{
+			var query = Container.GetItemQueryIterator<Game>( new QueryDefinition( @"SELECT *
+FROM c
+WHERE c.surveyId = @surveyId
+	AND c.hostId = @hostId" )
+				.WithParameter( "@surveyId", surveyId.ToLower() )
+				.WithParameter( "@hostId", hostId.ToLower() ),
+				requestOptions: new QueryRequestOptions
+				{
+					PartitionKey = new PartitionKey( groupId.ToLower() )
+				} );
+
+			var games = new List<Game>();
+
+			while( query.HasMoreResults )
+			{
+				var response = await query.ReadNextAsync();
+				games.AddRange( response.Resource );
+			}
+
+			return games;
 		}
 
 		public override async Task SaveAsync( Game game )

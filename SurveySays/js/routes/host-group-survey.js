@@ -2,29 +2,10 @@
 	path: ':groupId/:surveyId',
 	component: {
 		beforeRouteEnter: function(to, from, next) {
-			var route = "/host",
-				bc = [0, breadcrumbs.length,
-					{
-						text: "Home",
-						url: "/"
-					},
-					{
-						text: "Host",
-						route: route
-					},
-					{
-						text: to.params.groupId,
-						route: route += "/" + encodeURIComponent(to.params.groupId)
-					},
-					{
-						active: true,
-						text: "Survey"
-					}];
-			breadcrumbs.splice.apply(breadcrumbs, bc);
-			next(vm => vm.loadSurvey(to.params.groupId, to.params.surveyId));
+			next(vm => vm.loadData(to.params.groupId, to.params.surveyId));
 		},
 		beforeRouteUpdate: function(to, from, next) {
-			this.loadSurvey(to.params.groupId, to.params.surveyId);
+			this.loadData(to.params.groupId, to.params.surveyId);
 			next();
 		},
 		data: function() {
@@ -32,6 +13,10 @@
 				currentAnswer: null,
 				editAnswer: null,
 				editQuestion: "",
+				games: null,
+				gamesProblem: null,
+				gameName: "",
+				gameProblem: null,
 				groupId: null,
 				newAnswers: [],
 				questionProblem: null,
@@ -163,6 +148,33 @@
 					this.saveSurvey();
 				}
 			},
+			gameLink: function(game) {
+				return "/host/" + encodeURIComponent(this.groupId) + '/' + encodeURIComponent(this.surveyId) + '/' + encodeURIComponent(game.id);
+			},
+			gameSave: function(event) {
+				var t = this,
+					name = t.gameName.trim(),
+					lower = name.toLowerCase();
+				if(!name)
+					t.gameProblem = "You must enter a name for your new game.";
+				else if(t.games.find(game => (game.name || game.id).toLowerCase() == lower))
+					t.gameProblem = "The game name should be unique.";
+				else {
+					t.gameProblem = 0;
+					apiService.saveGame({
+						groupId: t.groupId,
+						name: name,
+						answers: t.survey.answers.map(answer => null),//Initially all answers are null so they're not shown to players
+						question: t.survey.question,
+						surveyId: t.surveyId
+					})
+						.then(game => {
+							t.games.push(game);
+							$('#game_modal').modal('hide');
+							t.gameProblem = null;
+						}, problem => t.gameProblem = problem || "There was a problem saving.");
+				}
+			},
 			/**
 			 * Gets editAnswer if editing the specified answer
 			 * @param {any} answer
@@ -173,16 +185,42 @@
 					return edit;
 				return null;
 			},
-			loadSurvey: function(groupId, surveyId) {
+			loadData: function(groupId, surveyId) {
 				var t = this;
+				groupId = groupId.toLowerCase();
+				surveyId = surveyId.toLowerCase();
 				if(groupId == t.groupId && surveyId == t.surveyId)
 					return;
-				t.survey = null;
+
+				var route = "/host",
+					bc = [0, breadcrumbs.length,
+						{
+							text: "Home",
+							url: "/"
+						},
+						{
+							text: "Host",
+							route: route
+						},
+						{
+							text: groupId,
+							route: route += "/" + encodeURIComponent(groupId)
+						},
+						{
+							active: true,
+							text: "Survey"
+						}];
+				breadcrumbs.splice.apply(breadcrumbs, bc);
+
+				t.survey = t.surveyProblem = t.gamesProblem = null;
+
 				apiService.loadSurvey(t.groupId = groupId, t.surveyId = surveyId)
 					.then(survey => {
 						t.survey = survey;
 						t.currentAnswer = survey.answers[0];
 					}, problem => t.surveyProblem = problem || "Invalid survey");
+				apiService.loadGames(groupId, surveyId)
+					.then(games => t.games = games, problem => t.gamesProblem = problem || "Invalid survey");
 			},
 			newAnswerAdd: function(e) {
 				var t = this;
@@ -223,11 +261,12 @@
 				e.preventDefault();
 			},
 			questionSave: function(e) {
-				var t = this;
-				if(t.editQuestion) {
+				var t = this,
+					question = t.editQuestion.trim();
+				if(question) {
 					t.questionProblem = 0;
-					if(t.survey.question != t.editQuestion) {
-						t.survey.question = t.editQuestion;
+					if(t.survey.question != question) {
+						t.survey.question = question;
 						t.saveSurvey()
 							.then(survey => {
 								$('#question_modal').modal('hide');
@@ -264,6 +303,22 @@
 	</div>
 	<div v-else-if="surveyProblem">{{surveyProblem}}</div>
 	<div v-else>Loading...</div>
+
+	<h3 class="mt-3">Games</h3>
+	<div v-if="games">
+		<div v-if="0 === games.length">No games</div>
+		<ul v-else>
+			<li v-for="game in games">
+				<router-link :to="gameLink(game)">{{game.name || game.id}}</router-link>
+			</li>
+		</ul>
+		<div class="form-group">
+			<button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#game_modal">Start a new game</button>
+		</div>
+	</div>
+	<div v-else-if="gamesProblem">{{gamesProblem}}</div>
+	<div v-else>Loading...</div>
+
 	<div class="modal fade" id="question_modal" tabindex="-1" aria-labelledby="question_title" aria-hidden="true">
 		<div class="modal-dialog">
 			<div class="modal-content">
@@ -276,12 +331,35 @@
 				<div class="modal-body">
 					<div class="form-group">
 						<label for="survey_question">Survey Question</label>
-						<input id="survey_question" class="form-control" :class="{'is-invalid': questionProblem}" v-model.trim="editQuestion" required="required" aria-describedby="survey_question_problem" />
+						<input id="survey_question" class="form-control" :class="{'is-invalid': questionProblem}" v-model="editQuestion" required="required" aria-describedby="survey_question_problem" />
 						<div id="survey_question_problem" class="invalid-feedback" v-show="questionProblem">{{questionProblem}}</div>
 					</div>
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-primary" @click="questionSave($event)" :disabled="questionProblem === 0">OK</button>
+					<button type="button" class="btn btn-primary" @click="questionSave($event)" :disabled="questionProblem === 0 || !survey">OK</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal fade" id="game_modal" tabindex="-1" aria-labelledby="game_title" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="game_title">New Game</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<div class="form-group">
+						<label for="game_name">Game Name</label>
+						<input id="game_name" class="form-control" :class="{'is-invalid': gameProblem}" v-model="gameName" required="required" aria-describedby="game_name_problem" />
+						<div id="game_name_problem" class="invalid-feedback" v-show="gameProblem">{{gameProblem}}</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" @click="gameSave($event)" :disabled="gameProblem === 0">OK</button>
 				</div>
 			</div>
 		</div>

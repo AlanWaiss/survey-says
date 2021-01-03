@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Web;
 using SurveySays.Models;
 using SurveySays.Repositories;
 using System;
@@ -28,48 +30,58 @@ namespace SurveySays.Controllers
 			return Ok( survey );
 		}
 
+		[Authorize]
 		[HttpPut, Route( "{groupId}" )]
 		public async Task<IActionResult> Post( string groupId, Survey survey )
 		{
-			if( !ModelState.IsValid )
-				return BadRequest( ModelState );
-
 			if( string.IsNullOrWhiteSpace( groupId ) )
 				return BadRequest( "Missing groupId." );
 
-			if( string.IsNullOrWhiteSpace( survey.GroupId ) )
-				survey.GroupId = groupId;
-			else if( !survey.GroupId.Equals( groupId, StringComparison.OrdinalIgnoreCase ) )
+			if( survey == null )
+				return BadRequest( "Missing survey data." );
+
+			if( !ModelState.IsValid )
+				return BadRequest( ModelState );
+
+			if( string.IsNullOrWhiteSpace( survey.GroupId ) || survey.GroupId.Equals( groupId, StringComparison.OrdinalIgnoreCase ) )
+				survey.GroupId = groupId.ToLower();
+			else
 				return BadRequest( "Invalid groupId." );
 
 			if( !string.IsNullOrWhiteSpace( survey.Id ) )
 				return BadRequest( "You may not set the Id." );
+
+			survey.HostId = User.GetObjectId().ToLower();
 
 			await SurveyRepository.SaveAsync( survey );
 
 			return Created( Request.Path + "/" + WebUtility.UrlEncode( survey.Id ), survey );
 		}
 
+		[Authorize]
 		[HttpPut, Route( "{groupId}/{surveyId}" )]
 		public async Task<IActionResult> Put( string groupId, string surveyId, Survey survey )
 		{
-			if( !ModelState.IsValid )
-				return BadRequest( ModelState );
-
 			if( string.IsNullOrWhiteSpace( groupId ) )
 				return BadRequest( "Missing groupId." );
 
-			if( string.IsNullOrWhiteSpace( survey.GroupId ) )
-				survey.GroupId = groupId;
-			else if( !survey.GroupId.Equals( groupId, StringComparison.OrdinalIgnoreCase ) )
+			if( survey == null )
+				return BadRequest( "Missing survey data." );
+
+			if( !ModelState.IsValid )
+				return BadRequest( ModelState );
+
+			if( string.IsNullOrWhiteSpace( survey.GroupId ) || survey.GroupId.Equals( groupId, StringComparison.OrdinalIgnoreCase ) )
+				survey.GroupId = groupId.ToLower();
+			else
 				return BadRequest( "Invalid groupId." );
 
 			if( string.IsNullOrWhiteSpace( surveyId ) )
 				return BadRequest( "Missing surveyId." );
 
-			if( string.IsNullOrWhiteSpace( survey.Id ) )
-				survey.Id = surveyId;
-			else if( !survey.Id.Equals( surveyId, StringComparison.OrdinalIgnoreCase ) )
+			if( string.IsNullOrWhiteSpace( survey.Id ) || survey.Id.Equals( surveyId, StringComparison.OrdinalIgnoreCase ) )
+				survey.Id = surveyId.ToLower();
+			else
 				return BadRequest( "Invalid surveyId." );
 
 			await SurveyRepository.SaveAsync( survey );
