@@ -1,5 +1,6 @@
 ﻿using Microsoft.Azure.Cosmos;
 using SurveySays.Models;
+using SurveySays.Security;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -8,9 +9,12 @@ namespace SurveySays.Repositories
 {
 	public class CosmosSurveyRepository : CosmosRepository<Survey>, ISurveyRepository
 	{
-		public CosmosSurveyRepository( Container container )
+		private ISecureHashGenerator SecureHashGenerator { get; }
+
+		public CosmosSurveyRepository( Container container, ISecureHashGenerator secureHashGenerator )
 			: base( container )
 		{
+			SecureHashGenerator = secureHashGenerator ?? throw new ArgumentNullException( nameof( secureHashGenerator ) );
 		}
 
 		public override async Task SaveAsync( Survey survey )
@@ -18,10 +22,16 @@ namespace SurveySays.Repositories
 			if( string.IsNullOrWhiteSpace( survey.Id ) )
 			{
 				survey.Id = Guid.NewGuid().ToString().ToLower();
+				survey.SecurityHash = SecureHashGenerator.GenerateHash( survey.Id, survey.HostId );
+
 				await Container.CreateItemAsync( survey, new PartitionKey( survey.GroupId ) );
 			}
 			else
+			{
+				SecureHashGenerator.Validate( survey, () => nameof( survey ) );
+
 				await Container.ReplaceItemAsync( survey, survey.Id, new PartitionKey( survey.GroupId ) );
+			}
 		}
 
 		public async Task<List<Survey>> SearchAsync( string groupId, string hostId )

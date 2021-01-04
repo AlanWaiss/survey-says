@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using SurveySays.Security;
 
 namespace SurveySays.Repositories
 {
@@ -18,7 +19,7 @@ namespace SurveySays.Repositories
 					var options = services.GetService<IOptions<CosmosGameOptions>>();
 					var containerFactory = services.GetService<CosmosContainerFactory>();
 					var container = containerFactory.GetContainer( options.Value );
-					return new CosmosGameRepository( container );
+					return new CosmosGameRepository( container, services.GetService<ISecureHashGenerator>() );
 				} );
 		}
 
@@ -42,7 +43,7 @@ namespace SurveySays.Repositories
 					var options = services.GetService<IOptions<CosmosSurveyOptions>>();
 					var containerFactory = services.GetService<CosmosContainerFactory>();
 					var container = containerFactory.GetContainer( options.Value );
-					return new CosmosSurveyRepository( container );
+					return new CosmosSurveyRepository( container, services.GetService<ISecureHashGenerator>() );
 				} );
 		}
 	}

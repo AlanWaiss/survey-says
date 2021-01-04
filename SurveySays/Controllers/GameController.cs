@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Web;
 using SurveySays.Models;
 using SurveySays.Repositories;
+using SurveySays.Security;
 using System;
 using System.Net;
 using System.Threading.Tasks;
@@ -15,9 +16,12 @@ namespace SurveySays.Controllers
 	{
 		private IGameRepository GameRepository { get; }
 
-		public GameController( IGameRepository gameRepository )
+		private ISecureHashGenerator SecureHashGenerator { get; }
+
+		public GameController( IGameRepository gameRepository, ISecureHashGenerator secureHashGenerator )
 		{
 			GameRepository = gameRepository ?? throw new ArgumentNullException( nameof( gameRepository ) );
+			SecureHashGenerator = secureHashGenerator ?? throw new ArgumentNullException( nameof( secureHashGenerator ) );
 		}
 
 		[HttpGet, Route( "{groupId}/{gameId}")]

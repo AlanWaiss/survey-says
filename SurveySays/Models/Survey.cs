@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Ignore = Newtonsoft.Json.JsonIgnoreAttribute;
@@ -7,7 +6,7 @@ using JsonProperty = Newtonsoft.Json.JsonPropertyAttribute;
 
 namespace SurveySays.Models
 {
-	public class Survey
+	public class Survey : ISecureObject
 	{
 		[Ignore]
 		[JsonIgnore]
@@ -38,5 +37,9 @@ namespace SurveySays.Models
 		[JsonPropertyName( "question" )]
 		[Required]
 		public string Question { get; set; }
+
+		[JsonProperty( "hash" )]
+		[JsonPropertyName( "hash" )]
+		public string SecurityHash { get; set; }
 	}
 }

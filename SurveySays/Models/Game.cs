@@ -6,7 +6,7 @@ using JsonProperty = Newtonsoft.Json.JsonPropertyAttribute;
 
 namespace SurveySays.Models
 {
-	public class Game
+	public class Game : ISecureObject
 	{
 		[JsonProperty( "answers" )]
 		[JsonPropertyName( "answers" )]
@@ -43,6 +43,10 @@ namespace SurveySays.Models
 		[JsonPropertyName( "question" )]
 		[Required]
 		public string Question { get; set; }
+
+		[JsonProperty( "hash" )]
+		[JsonPropertyName( "hash" )]
+		public string SecurityHash { get; set; }
 
 		[JsonProperty( "surveyId" )]
 		[JsonPropertyName( "surveyId" )]
