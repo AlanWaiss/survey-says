@@ -16,12 +16,9 @@ namespace SurveySays.Controllers
 	{
 		private IGameRepository GameRepository { get; }
 
-		private ISecureHashGenerator SecureHashGenerator { get; }
-
-		public GameController( IGameRepository gameRepository, ISecureHashGenerator secureHashGenerator )
+		public GameController( IGameRepository gameRepository )
 		{
 			GameRepository = gameRepository ?? throw new ArgumentNullException( nameof( gameRepository ) );
-			SecureHashGenerator = secureHashGenerator ?? throw new ArgumentNullException( nameof( secureHashGenerator ) );
 		}
 
 		[HttpGet, Route( "{groupId}/{gameId}")]

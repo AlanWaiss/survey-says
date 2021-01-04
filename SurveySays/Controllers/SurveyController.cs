@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Web;
 using SurveySays.Models;
 using SurveySays.Repositories;
+using SurveySays.Security;
 using System;
 using System.Net;
 using System.Threading.Tasks;
@@ -13,11 +14,14 @@ namespace SurveySays.Controllers
 	[Route( "api/[controller]" )]
 	public class SurveyController : ControllerBase
 	{
+		private ISecureHashGenerator SecureHashGenerator { get; }
+
 		private ISurveyRepository SurveyRepository { get; }
 
-		public SurveyController( ISurveyRepository surveyRepository )
+		public SurveyController( ISurveyRepository surveyRepository, ISecureHashGenerator secureHashGenerator )
 		{
 			SurveyRepository = surveyRepository ?? throw new ArgumentNullException( nameof( surveyRepository ) );
+			SecureHashGenerator = secureHashGenerator ?? throw new ArgumentNullException( nameof( secureHashGenerator ) );
 		}
 
 		[HttpGet, Route( "{groupId}/{surveyId}" )]
@@ -93,6 +97,12 @@ namespace SurveySays.Controllers
 				survey.Id = surveyId.ToLower();
 			else
 				return BadRequest( "Invalid surveyId." );
+
+			if( survey.HostId != User.GetObjectId() )
+				return BadRequest( "You cannot modify someone else's survey." );
+
+			if( !SecureHashGenerator.IsValidHash( survey ) )
+				return BadRequest( "Invalid hash." );
 
 			await SurveyRepository.SaveAsync( survey );
 

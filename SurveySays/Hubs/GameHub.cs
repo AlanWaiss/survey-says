@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Identity.Web;
 using SurveySays.Models;
 using SurveySays.Repositories;
+using SurveySays.Security;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace SurveySays.Hubs
@@ -18,14 +18,23 @@ namespace SurveySays.Hubs
 
 		private IGameRepository GameRepository { get; }
 
-		public GameHub( IGameRepository gameRepository )
+		private ISecureHashGenerator SecureHashGenerator { get; }
+
+		public GameHub( IGameRepository gameRepository, ISecureHashGenerator secureHashGenerator )
 		{
 			GameRepository = gameRepository ?? throw new ArgumentNullException( nameof( gameRepository ) );
+			SecureHashGenerator = secureHashGenerator ?? throw new ArgumentNullException( nameof( secureHashGenerator ) );
 		}
 
 		[Authorize]
 		public async Task GameUpdate( Game game )
 		{
+			if( game.HostId != Context.User.GetObjectId() )
+				return; //TODO: Notify/error?
+
+			if( !SecureHashGenerator.IsValidHash( game ) )
+				return; //TODO: Notify/error?
+
 			await GameRepository.SaveAsync( game );
 			await Clients.Group( game.Id ).SendAsync( Method.GameUpdate, game );
 		}
