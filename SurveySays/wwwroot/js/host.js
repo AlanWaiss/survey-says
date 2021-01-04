@@ -402,6 +402,8 @@ hostRoutes.push({
 				groupId: null,
 				group: null,
 				groupProblem: null,
+				question: "",
+				questionProblem: null,
 				surveys: null,
 				surveysProblem: null
 			};
@@ -445,6 +447,20 @@ hostRoutes.push({
 				})
 					.then(games => t.games = games, problem => t.gamesProblem = problem || "There was a problem loading the games.");
 			},
+			surveySave: function(event) {
+				var t = this,
+					question = t.question.trim();
+				if(!question)
+					t.questionProblem = "You must enter a question.";
+				else {
+					t.questionProblem = 0;
+					apiService.saveSurvey({
+						groupId: t.groupId,
+						question: question
+					})
+						.then(survey => t.$router.push("/host/" + encodeURIComponent(t.groupId) + "/" + encodeURIComponent(survey.id)), problem => t.questionProblem = problem || "There was a problem saving the survey.");
+				}
+			},
 			surveyUrl: function(survey) {
 				return '/host/' + encodeURIComponent(this.groupId) + '/' + encodeURIComponent(survey.id);
 			}
@@ -453,9 +469,9 @@ hostRoutes.push({
 	<h2>Group</h2>
 	<div v-if="group">
 		<p class="lead">{{group.name}}</p>
-		<div v-if="group.text" v-html="groupHtml"></div>
+		<div v-if="group.text" v-html="groupHtml" class="form-group"></div>
 
-		<h3 class="mt-3">Your Surveys</h3>
+		<h3>Your Surveys</h3>
 		<div v-if="surveysProblem" class="alert alert-danger">{{surveysProblem}}</div>
 		<div v-else-if="!surveys">Loading...</div>
 		<ul v-else-if="surveys.length > 0">
@@ -464,8 +480,11 @@ hostRoutes.push({
 			</li>
 		</ul>
 		<div v-else>There aren't any surveys in this group</div>
+		<div class="form-group">
+			<button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#survey_modal">Create a survey</button>
+		</div>
 
-		<h3 class="mt-3">Your Games</h3>
+		<h3>Your Games</h3>
 		<div v-if="gamesProblem" class="alert alert-danger">{{gamesProblem}}</div>
 		<div v-else-if="!games">Loading...</div>
 		<ul v-else-if="games.length > 0">
@@ -477,6 +496,29 @@ hostRoutes.push({
 	</div>
 	<div v-else-if="groupProblem">{{groupProblem}}</div>
 	<div v-else>Loading...</div>
+
+	<div class="modal fade" id="survey_modal" tabindex="-1" aria-labelledby="survey_title" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="survey_title">New Survey</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<div class="form-group">
+						<label for="survey_question">Survey Question</label>
+						<input id="survey_question" class="form-control" :class="{'is-invalid': questionProblem}" v-model="question" required="required" aria-describedby="survey_question_problem" />
+						<div id="survey_question_problem" class="invalid-feedback" v-show="questionProblem">{{questionProblem}}</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" @click="surveySave($event)" :disabled="questionProblem === 0">OK</button>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>`
 	}
 });

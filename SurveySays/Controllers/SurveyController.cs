@@ -41,7 +41,7 @@ namespace SurveySays.Controllers
 		}
 
 		[Authorize]
-		[HttpPut, Route( "{groupId}" )]
+		[HttpPost, Route( "{groupId}" )]
 		public async Task<IActionResult> Post( string groupId, Survey survey )
 		{
 			if( string.IsNullOrWhiteSpace( groupId ) )
