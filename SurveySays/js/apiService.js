@@ -21,8 +21,13 @@
 			credentials: 'same-origin'
 		});
 	},
-	loadGroup: function(groupId) {
-		return fetchJson(this.root + '/group/' + encodeURIComponent(groupId), {
+	loadGroup: function(lang, groupId) {
+		return fetchJson(this.root + '/group/' + encodeURIComponent(lang) + '/' + encodeURIComponent(groupId), {
+			credentials: 'same-origin'
+		});
+	},
+	loadGroups: function(lang) {
+		return fetchJson(this.root + '/group/' + encodeURIComponent(lang || "en"), {
 			credentials: 'same-origin'
 		});
 	},

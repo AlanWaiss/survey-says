@@ -31,8 +31,13 @@ const apiService = {
 			credentials: 'same-origin'
 		});
 	},
-	loadGroup: function(groupId) {
-		return fetchJson(this.root + '/group/' + encodeURIComponent(groupId), {
+	loadGroup: function(lang, groupId) {
+		return fetchJson(this.root + '/group/' + encodeURIComponent(lang) + '/' + encodeURIComponent(groupId), {
+			credentials: 'same-origin'
+		});
+	},
+	loadGroups: function(lang) {
+		return fetchJson(this.root + '/group/' + encodeURIComponent(lang || "en"), {
 			credentials: 'same-origin'
 		});
 	},
@@ -85,6 +90,19 @@ const apiService = {
 		});
 	}
 };
+const cache = {
+	groups: {},
+	save: function() {
+		var groups = this.groups;
+		localStorage.setItem("cache.groups", JSON.stringify(groups));
+	}
+}
+
+(function() {
+	var groups = localStorage.getItem("cache.groups");
+	if(groups)
+		cache.groups = JSON.parse(groups);
+})();
 const _debug = 1,
 	CONNECTION_STATUS = {
 		Connected: 1,
@@ -375,24 +393,35 @@ routes.push({
 hostRoutes.push({
 	path: '',
 	component: {
+		beforeRouteEnter: function(to, from, next) {
+			next(vm => vm.loadData(to.query.lang));
+		},
+		beforeRouteUpdate: function(to, from, next) {
+			this.loadData(to.query.lang);
+			next();
+		},
 		data: function() {
 			return {
-				games: [
-					{
-						id: "0ea9b217-a82a-43ea-9727-93adee35795f",
-						groupId: "tms",
-						question: "What is your favorite Christmas movie?",
-						surveyId: "68f399cb-2daf-4c3a-a0e0-6b9fb8a7dd8b"
-					}
-				]
+				groups: null,
+				groupsProblem: null
 			}
 		},
 		methods: {
-			gameUrl: game => "/host/" + encodeURIComponent(game.groupId) + "/" + encodeURIComponent(game.surveyId) + "/" + encodeURIComponent(game.id)
+			groupUrl: group => "/host/" + encodeURIComponent(group.id),
+			loadData: function(lang) {
+				var t = this;
+				apiService.loadGroups(lang)
+				.then(groups => t.groups = groups, problem => t.groupsProblem = problem || "There was a problem loading the groups.")
+			}
 		},
-		template: `<ul>
-	<li v-for="game in games"><router-link :to="gameUrl(game)">{{game.question}}</router-link></li>
-</ul>`
+		template: `<div class="container">
+	<h2>Groups</h2>
+	<ul v-if="groups">
+		<li v-for="group in groups"><router-link :to="groupUrl(group)">{{group.name}}</router-link></li>
+	</ul>
+	<div v-else-if="groupsProblem" class="alert alert-danger">{{groupsProblem}}</div>
+	<div v-else>Loading...</div>
+</div>`
 	}
 });
 hostRoutes.push({
@@ -434,13 +463,13 @@ hostRoutes.push({
 					return;
 
 				t.bc = buildRoute()
-					.addRoute("Host", "host")
+					.addRoute("Groups", "host")
 					.add(groupId)
 					.apply();
 
 				t.groupProblem = t.gamesProblem = t.surveysProblem = null;
 
-				apiService.loadGroup(t.groupId = groupId)
+				apiService.loadGroup("en", t.groupId = groupId)
 					.then(group => {
 						t.group = group;
 						if(group.name)
@@ -726,25 +755,11 @@ hostRoutes.push({
 				if(groupId == t.groupId && surveyId == t.surveyId)
 					return;
 
-				var route = "/host",
-					bc = [0, breadcrumbs.length,
-						{
-							text: "Home",
-							url: "/"
-						},
-						{
-							text: "Host",
-							route: route
-						},
-						{
-							text: groupId,
-							route: route += "/" + encodeURIComponent(groupId)
-						},
-						{
-							active: true,
-							text: "Survey"
-						}];
-				breadcrumbs.splice.apply(breadcrumbs, bc);
+				t.bc = buildRoute()
+					.addRoute("Groups", "host")
+					.addRoute(groupId, groupId)
+					.add("Survey")
+					.apply();
 
 				t.survey = t.surveyProblem = t.gamesProblem = null;
 
@@ -948,7 +963,7 @@ hostRoutes.push({
 				gameHub.on("gameUpdate", this.c_gameUpdate = (game => {
 					t.game = game;
 					if(game.name)
-						breadcrumbs[breadcrumbs.length - 1].text = game.name;
+						t.bc.active.text = game.name;
 				}));
 				t.c_groupId = groupId;
 				t.c_gameId = gameId;
@@ -977,30 +992,13 @@ hostRoutes.push({
 				gameId = gameId.toLowerCase();
 				groupId = groupId.toLowerCase();
 				surveyId = surveyId.toLowerCase();
-				var route = "/host",
-					bc = [0, breadcrumbs.length,
-						{
-							text: "Home",
-							url: "/"
-						},
-						{
-							text: "Host",
-							route: route
-						},
-						{
-							text: groupId,
-							route: route += "/" + encodeURIComponent(groupId)
-						},
-						{
-							text: "Survey",
-							route: route += "/" + encodeURIComponent(surveyId)
-						},
-						{
-							active: true,
-							text: "Host Game"
-						}];
 
-				breadcrumbs.splice.apply(breadcrumbs, bc);
+				t.bc = buildRoute()
+					.addRoute("Groups", "host")
+					.addRoute(groupId, groupId)
+					.addRoute("Survey", surveyId)
+					.add("Host Game")
+					.apply();
 
 				if(groupId != t.groupId || gameId != t.gameId) {
 					t.gameId = gameId;
@@ -1047,8 +1045,128 @@ hostRoutes.push({
 </div>`
 	}
 });
+const playRoutes = [];
+
 routes.push({
-	path: '/play/:groupId/:gameId',
+	path: '/play',
+	component: {
+		template: `<div>
+	<router-view></router-view>
+</div>`
+	},
+	children: playRoutes
+});
+playRoutes.push({
+	path: '',
+	component: {
+		beforeRouteEnter: function(to, from, next) {
+			next(vm => vm.loadData(to.query.lang));
+		},
+		beforeRouteUpdate: function(to, from, next) {
+			this.loadData(to.query.lang);
+			next();
+		},
+		data: function() {
+			return {
+				groups: null,
+				groupsProblem: null
+			}
+		},
+		methods: {
+			groupUrl: group => "/play/" + encodeURIComponent(group.id),
+			loadData: function(lang) {
+				var t = this;
+				apiService.loadGroups(lang)
+					.then(groups => t.groups = groups, problem => t.groupsProblem = problem || "There was a problem loading the groups.")
+			}
+		},
+		template: `<div class="container">
+	<h2>Groups</h2>
+	<ul v-if="groups">
+		<li v-for="group in groups"><router-link :to="groupUrl(group)">{{group.name}}</router-link></li>
+	</ul>
+	<div v-else-if="groupsProblem" class="alert alert-danger">{{groupsProblem}}</div>
+	<div v-else>Loading...</div>
+</div>`
+	}
+})
+playRoutes.push({
+	path: ':groupId',
+	component: {
+		beforeRouteEnter: function(to, from, next) {
+			next(vm => vm.loadData(to.params.groupId));
+		},
+		beforeRouteUpdate: function(to, from, next) {
+			this.loadData(to.params.groupId);
+			next();
+		},
+		data: function() {
+			return {
+				games: null,
+				gamesProblem: null,
+				groupId: null,
+				group: null,
+				groupProblem: null,
+				question: "",
+				questionProblem: null
+			};
+		},
+		computed: {
+			groupHtml: function() {
+				return marked(this.group.text, { sanitize: true });
+			}
+		},
+		methods: {
+			gameUrl: function(game) {
+				return '/play/' + encodeURIComponent(this.groupId) + '/' + encodeURIComponent(game.id);
+			},
+			loadData: function(groupId) {
+				var t = this;
+				groupId = groupId.toLowerCase();
+				if(groupId == t.groupId)
+					return;
+
+				t.bc = buildRoute()
+					.addRoute("Groups", "play")
+					.add(groupId)
+					.apply();
+
+				t.groupProblem = t.gamesProblem = null;
+
+				apiService.loadGroup("en", t.groupId = groupId)
+					.then(group => {
+						t.group = group;
+						if(group.name)
+							t.bc.active.text = group.name;
+					}, problem => t.groupProblem = problem || "There was a problem loading the group.");
+
+				apiService.loadGames(groupId)
+					.then(games => t.games = games, problem => t.gamesProblem = problem || "There was a problem loading the games.");
+			}
+		},
+		template: `<div class="container">
+	<h2>Group</h2>
+	<div v-if="group">
+		<p class="lead">{{group.name}}</p>
+		<div v-if="group.text" v-html="groupHtml" class="form-group"></div>
+
+		<h3>Available Games</h3>
+		<div v-if="gamesProblem" class="alert alert-danger">{{gamesProblem}}</div>
+		<div v-else-if="!games">Loading...</div>
+		<ul v-else-if="games.length > 0">
+			<li v-for="game in games">
+				<router-link :to="gameUrl(game)">{{game.name}} ({{game.question || "new"}})</router-link>
+			</li>
+		</ul>
+		<div v-else>You haven't started any games in this group</div>
+	</div>
+	<div v-else-if="groupProblem">{{groupProblem}}</div>
+	<div v-else>Loading...</div>
+</div>`
+	}
+});
+playRoutes.push({
+	path: ':groupId/:gameId',
 	component: {
 		beforeRouteEnter: function(to, from, next) {
 			next(vm => vm.connect(to.params.groupId, to.params.gameId));
@@ -1068,33 +1186,19 @@ routes.push({
 		},
 		methods: {
 			connect: function(groupId, gameId) {
-				var t = this,
-					route = "/play",
-					bc = [0, breadcrumbs.length,
-						{
-							text: "Home",
-							route: "/"
-						},
-						{
-							text: "Play",
-							route: route
-						},
-						{
-							text: groupId,
-							route: route += "/" + encodeURIComponent(groupId)
-						},
-						{
-							active: true,
-							text: "Game"
-						}];
+				var t = this;
 
-				breadcrumbs.splice.apply(breadcrumbs, bc);
+				t.bc = buildRoute()
+					.addRoute("Groups", "play")
+					.addRoute(groupId, groupId)
+					.add("Game")
+					.apply();
 
 				t.disconnect();
 				gameHub.on("gameUpdate", this.c_gameUpdate = (game => {
 					t.game = game;
 					if(game.name)
-						bc[bc.length - 1].text = game.name;
+						t.bc.active.text = game.name;
 				}));
 				t.c_groupId = groupId;
 				t.c_gameId = gameId;
@@ -1128,7 +1232,7 @@ routes.push({
 	<div v-else>Loading...</div>
 </div>`
 	}
-});
+})
 const Index = {
 	template: `<div class="row align-items-center">
 	<sign-in class="col-sm"></sign-in>

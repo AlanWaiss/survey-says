@@ -4,6 +4,7 @@
     "inputFiles": [
       "js/fetch-json.js",
       "js/apiService.js",
+      "js/cache.js",
       "js/gameHub.js",
       "js/routes.js",
       "js/breadcrumb-nav.js",
@@ -17,43 +18,9 @@
       "js/routes/host-group-survey.js",
       "js/routes/host-group-survey-game.js",
       "js/routes/play.js",
-      "js/routes/index.js",
-      "js/router.js",
-      "js/app.js"
-    ]
-  },
-  {
-    "outputFileName": "wwwroot/js/host.js",
-    "inputFiles": [
-      "js/apiService.js",
-      "js/gameHub.js",
-      "js/routes.js",
-      "js/breadcrumb-nav.js",
-      "js/components/answer-board.js",
-      "js/components/survey-answer.js",
-      "js/components/survey-board.js",
-      "js/components/sign-in.js",
-      "js/routes/host.js",
-      "js/routes/host-index.js",
-      "js/routes/host-group.js",
-      "js/routes/host-group-survey.js",
-      "js/routes/host-group-survey-game.js",
-      "js/routes/index.js",
-      "js/router.js",
-      "js/app.js"
-    ]
-  },
-  {
-    "outputFileName": "wwwroot/js/play.js",
-    "inputFiles": [
-      "js/apiService.js",
-      "js/gameHub.js",
-      "js/routes.js",
-      "js/breadcrumb-nav.js",
-      "js/components/answer-board.js",
-      "js/components/survey-answer.js",
-      "js/components/sign-in.js",
-      "js/routes/play.js",
+      "js/routes/play-index.js",
+      "js/routes/play-group.js",
+      "js/routes/play-group-game.js",
       "js/routes/index.js",
       "js/router.js",
       "js/app.js"

@@ -1,4 +1,5 @@
 ﻿using SurveySays.Models;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace SurveySays.Repositories
@@ -8,18 +9,24 @@ namespace SurveySays.Repositories
 		/// <summary>
 		/// Delete the group from the Cosmos container.
 		/// </summary>
-		/// <param name="region"></param>
+		/// <param name="lang"></param>
 		/// <param name="id"></param>
 		/// <returns></returns>
-		Task DeleteAsync( string region, string id );
+		Task DeleteAsync( string lang, string id );
 
 		/// <summary>
 		/// Gets a group from the Cosmos container.
 		/// </summary>
-		/// <param name="region"></param>
+		/// <param name="lang"></param>
 		/// <param name="id"></param>
 		/// <returns></returns>
-		Task<Group> GetAsync( string region, string id );
+		Task<Group> GetAsync( string lang, string id );
+
+		/// <summary>
+		/// List all the groups.
+		/// </summary>
+		/// <returns></returns>
+		Task<List<Group>> ListAsync( string lang );
 
 		/// <summary>
 		/// Save the group.

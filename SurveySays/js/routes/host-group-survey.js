@@ -192,25 +192,11 @@
 				if(groupId == t.groupId && surveyId == t.surveyId)
 					return;
 
-				var route = "/host",
-					bc = [0, breadcrumbs.length,
-						{
-							text: "Home",
-							url: "/"
-						},
-						{
-							text: "Host",
-							route: route
-						},
-						{
-							text: groupId,
-							route: route += "/" + encodeURIComponent(groupId)
-						},
-						{
-							active: true,
-							text: "Survey"
-						}];
-				breadcrumbs.splice.apply(breadcrumbs, bc);
+				t.bc = buildRoute()
+					.addRoute("Groups", "host")
+					.addRoute(groupId, groupId)
+					.add("Survey")
+					.apply();
 
 				t.survey = t.surveyProblem = t.gamesProblem = null;
 

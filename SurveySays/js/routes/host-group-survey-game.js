@@ -42,7 +42,7 @@
 				gameHub.on("gameUpdate", this.c_gameUpdate = (game => {
 					t.game = game;
 					if(game.name)
-						breadcrumbs[breadcrumbs.length - 1].text = game.name;
+						t.bc.active.text = game.name;
 				}));
 				t.c_groupId = groupId;
 				t.c_gameId = gameId;
@@ -71,30 +71,13 @@
 				gameId = gameId.toLowerCase();
 				groupId = groupId.toLowerCase();
 				surveyId = surveyId.toLowerCase();
-				var route = "/host",
-					bc = [0, breadcrumbs.length,
-						{
-							text: "Home",
-							url: "/"
-						},
-						{
-							text: "Host",
-							route: route
-						},
-						{
-							text: groupId,
-							route: route += "/" + encodeURIComponent(groupId)
-						},
-						{
-							text: "Survey",
-							route: route += "/" + encodeURIComponent(surveyId)
-						},
-						{
-							active: true,
-							text: "Host Game"
-						}];
 
-				breadcrumbs.splice.apply(breadcrumbs, bc);
+				t.bc = buildRoute()
+					.addRoute("Groups", "host")
+					.addRoute(groupId, groupId)
+					.addRoute("Survey", surveyId)
+					.add("Host Game")
+					.apply();
 
 				if(groupId != t.groupId || gameId != t.gameId) {
 					t.gameId = gameId;

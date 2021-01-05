@@ -28,6 +28,20 @@ namespace SurveySays.Models
 		public string Id { get; set; }
 
 		[Ignore, JsonIgnore]
+		private string lang;
+
+		/// <summary>
+		/// Used as the partition key
+		/// </summary>
+		[JsonProperty( "lang" )]
+		[JsonPropertyName( "lang" )]
+		public string Language
+		{
+			get => lang ??= "en";
+			set => lang = value?.ToLower();
+		}
+
+		[Ignore, JsonIgnore]
 		private List<string> members;
 
 		/// <summary>
@@ -44,20 +58,6 @@ namespace SurveySays.Models
 		[JsonProperty( "name" )]
 		[JsonPropertyName( "name" )]
 		public string Name { get; set; }
-
-		[Ignore, JsonIgnore]
-		private string region;
-
-		/// <summary>
-		/// Used as the partition key
-		/// </summary>
-		[JsonProperty( "region" )]
-		[JsonPropertyName( "region" )]
-		public string Region
-		{
-			get => region ??= "usa";
-			set => region = value;
-		}
 
 		[JsonProperty( "text" )]
 		[JsonPropertyName( "text" )]

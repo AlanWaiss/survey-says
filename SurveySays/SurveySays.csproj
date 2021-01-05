@@ -9,14 +9,10 @@
     <Content Remove="bundleconfig.json" />
     <Content Remove="compilerconfig.json" />
     <Content Remove="wwwroot\js\app.min.js" />
-    <Content Remove="wwwroot\js\host.min.js" />
-    <Content Remove="wwwroot\js\play.js" />
   </ItemGroup>
 
   <ItemGroup>
     <_ContentIncludedByDefault Remove="wwwroot\js\app.min.js" />
-    <_ContentIncludedByDefault Remove="wwwroot\js\host.min.js" />
-    <_ContentIncludedByDefault Remove="wwwroot\js\play.js" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,8 +27,6 @@
     <None Include="bundleconfig.json" />
     <None Include="compilerconfig.json" />
     <None Include="wwwroot\js\app.min.js" />
-    <None Include="wwwroot\js\host.min.js" />
-    <None Include="wwwroot\js\play.js" />
   </ItemGroup>
 
   <ItemGroup>

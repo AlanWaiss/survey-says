@@ -37,13 +37,13 @@
 					return;
 
 				t.bc = buildRoute()
-					.addRoute("Host", "host")
+					.addRoute("Groups", "host")
 					.add(groupId)
 					.apply();
 
 				t.groupProblem = t.gamesProblem = t.surveysProblem = null;
 
-				apiService.loadGroup(t.groupId = groupId)
+				apiService.loadGroup("en", t.groupId = groupId)
 					.then(group => {
 						t.group = group;
 						if(group.name)
