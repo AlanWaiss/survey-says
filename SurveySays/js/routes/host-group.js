@@ -37,6 +37,7 @@
 					return;
 
 				t.bc = buildRoute()
+					.addHome("Host")
 					.addRoute("Groups", "host")
 					.add(cache.groupName(groupId) || groupId)
 					.apply();

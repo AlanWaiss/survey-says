@@ -73,6 +73,7 @@
 				surveyId = surveyId.toLowerCase();
 
 				t.bc = buildRoute()
+					.addHome("Host")
 					.addRoute("Groups", "host")
 					.addRoute(cache.groupName(groupId) || groupId, groupId)
 					.addRoute("Survey", surveyId)

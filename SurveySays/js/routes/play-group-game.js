@@ -22,6 +22,7 @@
 				var t = this;
 
 				t.bc = buildRoute()
+					.addHome("Play")
 					.addRoute("Groups", "play")
 					.addRoute(cache.groupName(groupId) || groupId, groupId)
 					.add("Game")

@@ -35,6 +35,7 @@
 					return;
 
 				t.bc = buildRoute()
+					.addHome("Play")
 					.addRoute("Groups", "play")
 					.add(cache.groupName(groupId) || groupId)
 					.apply();

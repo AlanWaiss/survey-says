@@ -10,6 +10,7 @@
 	margin-bottom: .5rem;
 	outline-offset: .2rem;
 	padding: .5rem 1rem;
+	position: relative;
 
 	.survey-active & {
 		&:focus, &:hover {
@@ -38,4 +39,23 @@
 
 .survey-answer-hide {
 	text-align: center;
+}
+
+.board-transition-enter-active {
+	transform-origin: 0 top;
+	transition: transform .5s ease-in;
+}
+
+.board-transition-leave-active {
+	bottom: .5rem;
+	left: 1rem;
+	position: absolute;
+	right: 1rem;
+	//margin-bottom: -1.5rem;
+	transform-origin: 0 bottom;
+	transition: transform .5s ease-in;
+}
+
+.board-transition-enter, .board-transition-leave-to {
+	transform: rotateX(90deg);
 }

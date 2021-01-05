@@ -19,6 +19,7 @@
 			loadData: function(lang) {
 				var t = this;
 				t.bc = buildRoute()
+					.addHome("Host")
 					.add("Groups", "play")
 					.apply();
 				apiService.loadGroups(lang)

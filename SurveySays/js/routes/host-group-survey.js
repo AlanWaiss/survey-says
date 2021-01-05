@@ -193,6 +193,7 @@
 					return;
 
 				t.bc = buildRoute()
+					.addHome("Host")
 					.addRoute("Groups", "host")
 					.addRoute(cache.groupName(groupId) || groupId, groupId)
 					.add("Survey")

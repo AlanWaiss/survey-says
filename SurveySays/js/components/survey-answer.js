@@ -52,23 +52,25 @@
 		}
 	},
 	template: `<li class="survey-answer" :id="prefix + index" @click="answerClick($event)" @keydown="answerKeyDown($event)">
-	<div v-if="edit" class="survey-answer-edit form-row">
-		<div class="col-sm">
-			<label :for="textId">Text</label>
-			<input type="text" :id="textId" class="form-control" v-model="edit.text" @blur="textBlur($event)" required />
+	<transition name="board-transition">
+		<div v-if="edit" key="edit" class="survey-answer-edit form-row">
+			<div class="col-sm">
+				<label :for="textId">Text</label>
+				<input type="text" :id="textId" class="form-control" v-model="edit.text" @blur="textBlur($event)" required />
+			</div>
+			<div class="col-sm-auto">
+				<label :for="scoreId">Score</label>
+				<input type="text" :id="scoreId" class="form-control" inputmode="numeric" placeholder="Score" v-model.number="edit.score" @blur="scoreBlur($event)" required />
+			</div>
 		</div>
-		<div class="col-sm-auto">
-			<label :for="scoreId">Score</label>
-			<input type="text" :id="scoreId" class="form-control" inputmode="numeric" placeholder="Score" v-model.number="edit.score" @blur="scoreBlur($event)" required />
+		<div v-else-if="answer" key="show" class="survey-answer-show">
+			<div class="survey-answer-text">{{answer.text}}</div>
+			<div class="survey-answer-score">{{answer.score}}</div>
+			<slot></slot>
 		</div>
-	</div>
-	<div v-else-if="answer" class="survey-answer-show">
-		<div class="survey-answer-text">{{answer.text}}</div>
-		<div class="survey-answer-score">{{answer.score}}</div>
-		<slot></slot>
-	</div>
-	<div v-else class="survey-answer-hide">
-		<div class="survey-answer-index badge badge-pill badge-secondary">{{index + 1}}</div>
-	</div>
+		<div v-else key="hide" class="survey-answer-hide">
+			<div class="survey-answer-index badge badge-pill badge-secondary">{{index + 1}}</div>
+		</div>
+	</transition
 </li>`
 });

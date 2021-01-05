@@ -18,6 +18,14 @@ $.extend(buildRoute.prototype, {
 		this.path.push(this.active = item);
 		return this;
 	},
+	addHome: function(text) {
+		//Do NOT use this.add
+		this.path.push(this.active = {
+			text: text || "Home",
+			route: "/"
+		});
+		return this;
+	},
 	addRoute: function(text, routeComponent) {
 		return this.add({
 			text: text,

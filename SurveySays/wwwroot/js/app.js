@@ -219,6 +219,14 @@ $.extend(buildRoute.prototype, {
 		this.path.push(this.active = item);
 		return this;
 	},
+	addHome: function(text) {
+		//Do NOT use this.add
+		this.path.push(this.active = {
+			text: text || "Home",
+			route: "/"
+		});
+		return this;
+	},
 	addRoute: function(text, routeComponent) {
 		return this.add({
 			text: text,
@@ -322,24 +330,26 @@ Vue.component('survey-answer', {
 		}
 	},
 	template: `<li class="survey-answer" :id="prefix + index" @click="answerClick($event)" @keydown="answerKeyDown($event)">
-	<div v-if="edit" class="survey-answer-edit form-row">
-		<div class="col-sm">
-			<label :for="textId">Text</label>
-			<input type="text" :id="textId" class="form-control" v-model="edit.text" @blur="textBlur($event)" required />
+	<transition name="board-transition">
+		<div v-if="edit" key="edit" class="survey-answer-edit form-row">
+			<div class="col-sm">
+				<label :for="textId">Text</label>
+				<input type="text" :id="textId" class="form-control" v-model="edit.text" @blur="textBlur($event)" required />
+			</div>
+			<div class="col-sm-auto">
+				<label :for="scoreId">Score</label>
+				<input type="text" :id="scoreId" class="form-control" inputmode="numeric" placeholder="Score" v-model.number="edit.score" @blur="scoreBlur($event)" required />
+			</div>
 		</div>
-		<div class="col-sm-auto">
-			<label :for="scoreId">Score</label>
-			<input type="text" :id="scoreId" class="form-control" inputmode="numeric" placeholder="Score" v-model.number="edit.score" @blur="scoreBlur($event)" required />
+		<div v-else-if="answer" key="show" class="survey-answer-show">
+			<div class="survey-answer-text">{{answer.text}}</div>
+			<div class="survey-answer-score">{{answer.score}}</div>
+			<slot></slot>
 		</div>
-	</div>
-	<div v-else-if="answer" class="survey-answer-show">
-		<div class="survey-answer-text">{{answer.text}}</div>
-		<div class="survey-answer-score">{{answer.score}}</div>
-		<slot></slot>
-	</div>
-	<div v-else class="survey-answer-hide">
-		<div class="survey-answer-index badge badge-pill badge-secondary">{{index + 1}}</div>
-	</div>
+		<div v-else key="hide" class="survey-answer-hide">
+			<div class="survey-answer-index badge badge-pill badge-secondary">{{index + 1}}</div>
+		</div>
+	</transition
 </li>`
 });
 Vue.component('survey-board', {
@@ -433,6 +443,7 @@ hostRoutes.push({
 			loadData: function(lang) {
 				var t = this;
 				t.bc = buildRoute()
+					.addHome("Host")
 					.add("Groups", "play")
 					.apply();
 				apiService.loadGroups(lang)
@@ -488,6 +499,7 @@ hostRoutes.push({
 					return;
 
 				t.bc = buildRoute()
+					.addHome("Host")
 					.addRoute("Groups", "host")
 					.add(cache.groupName(groupId) || groupId)
 					.apply();
@@ -781,6 +793,7 @@ hostRoutes.push({
 					return;
 
 				t.bc = buildRoute()
+					.addHome("Host")
 					.addRoute("Groups", "host")
 					.addRoute(cache.groupName(groupId) || groupId, groupId)
 					.add("Survey")
@@ -1019,6 +1032,7 @@ hostRoutes.push({
 				surveyId = surveyId.toLowerCase();
 
 				t.bc = buildRoute()
+					.addHome("Host")
 					.addRoute("Groups", "host")
 					.addRoute(cache.groupName(groupId) || groupId, groupId)
 					.addRoute("Survey", surveyId)
@@ -1102,6 +1116,7 @@ playRoutes.push({
 			loadData: function(lang) {
 				var t = this;
 				t.bc = buildRoute()
+					.addHome("Play")
 					.add("Groups", "play")
 					.apply();
 				apiService.loadGroups(lang)
@@ -1155,6 +1170,7 @@ playRoutes.push({
 					return;
 
 				t.bc = buildRoute()
+					.addHome("Play")
 					.addRoute("Groups", "play")
 					.add(cache.groupName(groupId) || groupId)
 					.apply();
@@ -1217,6 +1233,7 @@ playRoutes.push({
 				var t = this;
 
 				t.bc = buildRoute()
+					.addHome("Play")
 					.addRoute("Groups", "play")
 					.addRoute(cache.groupName(groupId) || groupId, groupId)
 					.add("Game")
@@ -1261,21 +1278,38 @@ playRoutes.push({
 </div>`
 	}
 })
-const Index = {
-	template: `<div class="row align-items-center">
-	<sign-in class="col-sm"></sign-in>
-	<div class="col-sm">
-		<router-link to="play" class="btn btn-outline-secondary btn-block btn-lg">Play</router-link>
-		<a href="/host" class="btn btn-outline-secondary btn-block btn-lg">Host</a>
-	</div>
-</div>`
-}
 routes.push({
-	path: '/:room',
-	component: Index
-}, {
-	path: '/',
-	component: Index
+	path: '',
+	component: {
+		beforeRouteEnter: function(to, from, next) {
+			next(vm => vm.loadData(to.query.lang));
+		},
+		beforeRouteUpdate: function(to, from, next) {
+			this.loadData(to.query.lang);
+			next();
+		},
+		data: function() {
+			return {};
+		},
+		methods: {
+			loadData: function(lang) {
+				var t = this;
+				t.bc = buildRoute()
+					.add("Home")
+					.apply();
+			}
+		},
+		template: `<div class="container pt-3">
+	<router-link to="play" class="btn btn-outline-secondary btn-block btn-lg">Play</router-link>
+	<a href="/host" class="btn btn-outline-secondary btn-block btn-lg">Host</a>
+</div>`/*
+	<div class="row align-items-center">
+		<sign-in class="col-sm"></sign-in>
+		<div class="col-sm">
+		--links
+		</div>
+	</div>*/
+	}
 });
 const router = new VueRouter({
 	mode: 'history',
