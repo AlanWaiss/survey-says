@@ -48,6 +48,10 @@ namespace SurveySays.Models
 		[JsonPropertyName( "hash" )]
 		public string SecurityHash { get; set; }
 
+		[JsonProperty( "strikes" )]
+		[JsonPropertyName( "strikes" )]
+		public int Strikes { get; set; }
+
 		[JsonProperty( "surveyId" )]
 		[JsonPropertyName( "surveyId" )]
 		[Required]

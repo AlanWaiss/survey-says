@@ -9,6 +9,7 @@
       "js/routes.js",
       "js/breadcrumb-nav.js",
       "js/components/answer-board.js",
+      "js/components/strike-counter.js",
       "js/components/survey-answer.js",
       "js/components/survey-board.js",
       "js/components/sign-in.js",

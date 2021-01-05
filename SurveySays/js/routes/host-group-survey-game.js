@@ -66,6 +66,13 @@
 					delete t.c_gameId;
 				}
 			},
+			incorrect: function() {
+				if(this.game) {
+					var update = $.extend(true, {}, this.game);
+					update.strikes++;
+					gameHub.send('GameUpdate', update);
+				}
+			},
 			loadData: function(groupId, surveyId, gameId) {
 				var t = this;
 				gameId = gameId.toLowerCase();
@@ -90,6 +97,13 @@
 				t.survey = t.surveyProblem = null;
 				apiService.loadSurvey(t.groupId = groupId, t.surveyId = surveyId)
 					.then(survey => t.survey = survey, problem => t.surveyProblem = problem || "Invalid survey");
+			},
+			removeStrike: function(event) {
+				if($(event.target).is('.strike') && this.game && this.game.strikes > 0) {
+					var update = $.extend(true, {}, this.game);
+					update.strikes--;
+					gameHub.send('GameUpdate', update);
+				}
 			}
 		},
 		template: `<div class="container-fluid pt-3">
@@ -105,6 +119,10 @@
 				</div>
 				<div v-else-if="surveyProblem">{{surveyProblem}}</div>
 				<div v-else>Loading...</div>
+
+				<div class="strike-counter">
+					<button class="btn btn-outline-danger" @click="incorrect">Incorrect</button>
+				</div>
 			</div>
 			<div class="card-footer">
 				Link to play: <a :href="gameUrl">{{gameUrl}}</a>
@@ -116,6 +134,7 @@
 				<div class="game">
 					<p class="lead">{{game.question}}</p>
 					<answer-board :answers="game.answers" prefix="game_answer_"></answer-board>
+					<strike-counter :strikes="game.strikes" @click.native="removeStrike($event)"></strike-count>
 				</div>
 			</div>
 			<div v-else class="card-body">Loading...</div>

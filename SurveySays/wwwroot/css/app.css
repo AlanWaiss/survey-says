@@ -1,4 +1,26 @@
-﻿.survey-active .survey-answer:focus, .survey-active .survey-answer:hover, .survey-active:focus .survey-answer.active {
+﻿.strike-counter {
+  align-items: center;
+  display: flex;
+  height: 4rem;
+  justify-content: center; }
+  .strike-counter .strike {
+    border: solid .25rem #f00;
+    color: #f00;
+    display: block;
+    font-weight: bold;
+    font-size: 2.5rem;
+    line-height: 2rem;
+    margin: 0 .5rem;
+    text-align: center;
+    width: 2.5rem; }
+
+.strike-enter-active {
+  transition: transform 1s ease-out; }
+
+.strike-enter {
+  transform: scale(5); }
+
+.survey-active .survey-answer:focus, .survey-active .survey-answer:hover, .survey-active:focus .survey-answer.active {
   border-color: #007bff;
   box-shadow: 0 2px 5px rgba(0, 123, 255, 0.3); }
 

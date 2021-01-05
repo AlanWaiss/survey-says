@@ -62,6 +62,7 @@
 		<h2>{{ game.name }}</h2>
 		<p class="lead">{{game.question}}</p>
 		<answer-board :answers="game.answers"></answer-board>
+		<strike-counter :strikes="game.strikes"></strike-count>
 	</div>
 	<div v-else>Loading...</div>
 </div>`
