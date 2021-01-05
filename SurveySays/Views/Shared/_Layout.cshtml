@@ -17,7 +17,7 @@
 			<span class="navbar-toggler-icon"></span>
 		</button>
 		<div class="collapse navbar-collapse" id="navbar_content"></div>
-		<ul class="navbar-nav">
+		<ul class="navbar-nav align-items-center">
 		@if( User.Identity.IsAuthenticated )
 		{
 			<li class="nav-item dropdown">
@@ -35,9 +35,16 @@
 				<a class="nav-link" href="~/MicrosoftIdentity/Account/SignIn">Sign in</a>
 			</li>
 		}
+			<li class="nav-item" id="audio_display">
+				<button type="button" class="btn fas" :class="icon" :title="text" @@click="click($event)"></button>
+			</li>
 		</ul>
 	</nav>
 	@RenderBody()
+	<div class="sr-only">
+		<audio id="audio_correct" src="~/mp3/correct.mp3" preload="auto" />
+		<audio id="audio_strike" src="~/mp3/strike.mp3" preload="auto" />
+	</div>
 	<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
 	<script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>

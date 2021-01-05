@@ -40,6 +40,7 @@
 				var t = this;
 				t.disconnect();
 				gameHub.on("gameUpdate", this.c_gameUpdate = (game => {
+					audioService.gameUpdate(t.game, game);
 					t.game = game;
 					if(game.name)
 						t.bc.active.text = game.name;

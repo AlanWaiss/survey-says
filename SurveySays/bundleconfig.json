@@ -4,6 +4,7 @@
     "inputFiles": [
       "js/fetch-json.js",
       "js/apiService.js",
+      "js/audioService.js",
       "js/cache.js",
       "js/gameHub.js",
       "js/routes.js",
