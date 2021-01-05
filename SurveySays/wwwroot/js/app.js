@@ -32,14 +32,24 @@ const apiService = {
 		});
 	},
 	loadGroup: function(lang, groupId) {
-		return fetchJson(this.root + '/group/' + encodeURIComponent(lang) + '/' + encodeURIComponent(groupId), {
+		var request = fetchJson(this.root + '/group/' + encodeURIComponent(lang) + '/' + encodeURIComponent(groupId), {
 			credentials: 'same-origin'
 		});
+		request.then(group => {
+			cache.groupName(groupId, group.name);
+			cache.save();
+		})
+		return request;
 	},
 	loadGroups: function(lang) {
-		return fetchJson(this.root + '/group/' + encodeURIComponent(lang || "en"), {
+		var request = fetchJson(this.root + '/group/' + encodeURIComponent(lang || "en"), {
 			credentials: 'same-origin'
 		});
+		request.then(groups => {
+			groups.forEach(group => cache.groupName(group.id, group.name));
+			cache.save();
+		})
+		return request;
 	},
 	loadSurvey: function(groupId, surveyId) {
 		return fetchJson(this.root + '/survey/' + encodeURIComponent(groupId) + '/' + encodeURIComponent(surveyId), {
@@ -91,17 +101,29 @@ const apiService = {
 	}
 };
 const cache = {
-	groups: {},
+	_groupName: {},
+	groupName: function(id, name) {
+		/*if(id && !name && "object" === typeof id) {
+			name = id.name;
+			id = id.id;
+		}*/
+		if(name) {
+			this._groupName[(id || "").toLowerCase()] = name;
+			return this;
+		}
+
+		return this._groupName[(id || "").toLowerCase()];
+	},
 	save: function() {
-		var groups = this.groups;
-		localStorage.setItem("cache.groups", JSON.stringify(groups));
+		var groupName = this._groupName;
+		localStorage.setItem("cache.groupname", JSON.stringify(groupName));
 	}
-}
+};
 
 (function() {
-	var groups = localStorage.getItem("cache.groups");
-	if(groups)
-		cache.groups = JSON.parse(groups);
+	var groupName = localStorage.getItem("cache.groupname");
+	if(groupName)
+		cache._groupName = JSON.parse(groupName);
 })();
 const _debug = 1,
 	CONNECTION_STATUS = {
@@ -410,8 +432,11 @@ hostRoutes.push({
 			groupUrl: group => "/host/" + encodeURIComponent(group.id),
 			loadData: function(lang) {
 				var t = this;
+				t.bc = buildRoute()
+					.add("Groups", "play")
+					.apply();
 				apiService.loadGroups(lang)
-				.then(groups => t.groups = groups, problem => t.groupsProblem = problem || "There was a problem loading the groups.")
+					.then(groups => t.groups = groups, problem => t.groupsProblem = problem || "There was a problem loading the groups.")
 			}
 		},
 		template: `<div class="container">
@@ -464,7 +489,7 @@ hostRoutes.push({
 
 				t.bc = buildRoute()
 					.addRoute("Groups", "host")
-					.add(groupId)
+					.add(cache.groupName(groupId) || groupId)
 					.apply();
 
 				t.groupProblem = t.gamesProblem = t.surveysProblem = null;
@@ -757,7 +782,7 @@ hostRoutes.push({
 
 				t.bc = buildRoute()
 					.addRoute("Groups", "host")
-					.addRoute(groupId, groupId)
+					.addRoute(cache.groupName(groupId) || groupId, groupId)
 					.add("Survey")
 					.apply();
 
@@ -995,7 +1020,7 @@ hostRoutes.push({
 
 				t.bc = buildRoute()
 					.addRoute("Groups", "host")
-					.addRoute(groupId, groupId)
+					.addRoute(cache.groupName(groupId) || groupId, groupId)
 					.addRoute("Survey", surveyId)
 					.add("Host Game")
 					.apply();
@@ -1076,6 +1101,9 @@ playRoutes.push({
 			groupUrl: group => "/play/" + encodeURIComponent(group.id),
 			loadData: function(lang) {
 				var t = this;
+				t.bc = buildRoute()
+					.add("Groups", "play")
+					.apply();
 				apiService.loadGroups(lang)
 					.then(groups => t.groups = groups, problem => t.groupsProblem = problem || "There was a problem loading the groups.")
 			}
@@ -1128,7 +1156,7 @@ playRoutes.push({
 
 				t.bc = buildRoute()
 					.addRoute("Groups", "play")
-					.add(groupId)
+					.add(cache.groupName(groupId) || groupId)
 					.apply();
 
 				t.groupProblem = t.gamesProblem = null;
@@ -1190,7 +1218,7 @@ playRoutes.push({
 
 				t.bc = buildRoute()
 					.addRoute("Groups", "play")
-					.addRoute(groupId, groupId)
+					.addRoute(cache.groupName(groupId) || groupId, groupId)
 					.add("Game")
 					.apply();
 

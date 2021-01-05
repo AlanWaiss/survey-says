@@ -18,6 +18,9 @@
 			groupUrl: group => "/play/" + encodeURIComponent(group.id),
 			loadData: function(lang) {
 				var t = this;
+				t.bc = buildRoute()
+					.add("Groups", "play")
+					.apply();
 				apiService.loadGroups(lang)
 					.then(groups => t.groups = groups, problem => t.groupsProblem = problem || "There was a problem loading the groups.")
 			}

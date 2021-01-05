@@ -74,7 +74,7 @@
 
 				t.bc = buildRoute()
 					.addRoute("Groups", "host")
-					.addRoute(groupId, groupId)
+					.addRoute(cache.groupName(groupId) || groupId, groupId)
 					.addRoute("Survey", surveyId)
 					.add("Host Game")
 					.apply();

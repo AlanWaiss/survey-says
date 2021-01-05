@@ -1,13 +1,25 @@
 ﻿const cache = {
-	groups: {},
+	_groupName: {},
+	groupName: function(id, name) {
+		/*if(id && !name && "object" === typeof id) {
+			name = id.name;
+			id = id.id;
+		}*/
+		if(name) {
+			this._groupName[(id || "").toLowerCase()] = name;
+			return this;
+		}
+
+		return this._groupName[(id || "").toLowerCase()];
+	},
 	save: function() {
-		var groups = this.groups;
-		localStorage.setItem("cache.groups", JSON.stringify(groups));
+		var groupName = this._groupName;
+		localStorage.setItem("cache.groupname", JSON.stringify(groupName));
 	}
-}
+};
 
 (function() {
-	var groups = localStorage.getItem("cache.groups");
-	if(groups)
-		cache.groups = JSON.parse(groups);
+	var groupName = localStorage.getItem("cache.groupname");
+	if(groupName)
+		cache._groupName = JSON.parse(groupName);
 })();

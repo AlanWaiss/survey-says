@@ -23,7 +23,7 @@
 
 				t.bc = buildRoute()
 					.addRoute("Groups", "play")
-					.addRoute(groupId, groupId)
+					.addRoute(cache.groupName(groupId) || groupId, groupId)
 					.add("Game")
 					.apply();
 

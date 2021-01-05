@@ -22,14 +22,24 @@
 		});
 	},
 	loadGroup: function(lang, groupId) {
-		return fetchJson(this.root + '/group/' + encodeURIComponent(lang) + '/' + encodeURIComponent(groupId), {
+		var request = fetchJson(this.root + '/group/' + encodeURIComponent(lang) + '/' + encodeURIComponent(groupId), {
 			credentials: 'same-origin'
 		});
+		request.then(group => {
+			cache.groupName(groupId, group.name);
+			cache.save();
+		})
+		return request;
 	},
 	loadGroups: function(lang) {
-		return fetchJson(this.root + '/group/' + encodeURIComponent(lang || "en"), {
+		var request = fetchJson(this.root + '/group/' + encodeURIComponent(lang || "en"), {
 			credentials: 'same-origin'
 		});
+		request.then(groups => {
+			groups.forEach(group => cache.groupName(group.id, group.name));
+			cache.save();
+		})
+		return request;
 	},
 	loadSurvey: function(groupId, surveyId) {
 		return fetchJson(this.root + '/survey/' + encodeURIComponent(groupId) + '/' + encodeURIComponent(surveyId), {

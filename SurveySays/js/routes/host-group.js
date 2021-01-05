@@ -38,7 +38,7 @@
 
 				t.bc = buildRoute()
 					.addRoute("Groups", "host")
-					.add(groupId)
+					.add(cache.groupName(groupId) || groupId)
 					.apply();
 
 				t.groupProblem = t.gamesProblem = t.surveysProblem = null;
