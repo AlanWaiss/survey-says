@@ -27,7 +27,7 @@ namespace SurveySays
 			services.AddControllers();
 			services.AddControllersWithViews()
 				.AddMicrosoftIdentityUI();
-			services.AddMicrosoftIdentityWebAppAuthentication( Configuration );
+			services.AddMicrosoftIdentityWebAppAuthentication( Configuration, "AzureAdB2C" );
 			services.AddSignalR();
 
 			services.AddSwaggerGen( c =>
